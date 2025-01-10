@@ -1,0 +1,20 @@
+@use "sass:meta";
+
+@include meta.load-css("../../../node_modules/bootstrap/scss/bootstrap");
+@include meta.load-css(
+  "../../../node_modules/bootstrap-icons/font/bootstrap-icons.min.css"
+);
+
+// Load the common styles
+@include meta.load-css("../../common/src/lib/styles/styles.scss");
+
+body {
+  height: 600px;
+  width: 375px;
+
+  color: #ffffff;
+  font-size: 16px;
+  background: var(--background);
+
+  margin: 0;
+}

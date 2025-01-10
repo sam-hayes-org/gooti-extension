@@ -1,0 +1,45 @@
+<div class="sam-text-header">
+  <span> Settings </span>
+</div>
+
+<span>SYNC: {{ syncFlow }}</span>
+
+<button class="btn btn-primary" (click)="onClickExportVault()">
+  Export Vault
+</button>
+
+<button
+  class="btn btn-primary"
+  (click)="
+    confirm.show(
+      'Do you really want to import a vault? All existing data will be overwritten.',
+      onImportVault.bind(fileInput)
+    )
+  "
+>
+  Import Vault
+</button>
+
+<div class="sam-flex-grow"></div>
+
+<button
+  class="btn btn-danger"
+  (click)="
+    confirm.show(
+      'Do you really want to delete your vault with all identities?',
+      onDeleteVault.bind(this)
+    )
+  "
+>
+  Delete Vault
+</button>
+
+<lib-confirm #confirm> </lib-confirm>
+
+<input
+  #fileInput
+  class="file-input"
+  type="file"
+  (change)="onImportFileChange($event)"
+  accept=".json"
+/>

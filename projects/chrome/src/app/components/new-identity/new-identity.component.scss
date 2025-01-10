@@ -1,0 +1,13 @@
+:host {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .content {
+    padding-left: var(--size);
+    padding-right: var(--size);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+}

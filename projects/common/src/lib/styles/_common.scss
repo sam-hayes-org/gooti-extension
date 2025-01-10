@@ -1,0 +1,37 @@
+.sam-text-header {
+  background: var(--background);
+  z-index: 20;
+  padding-top: var(--size);
+  padding-bottom: var(--size);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  span {
+    font-size: 20px;
+    font-weight: 500;
+  }
+}
+
+.sam-footer-grid-2 {
+  height: 60px;
+  min-height: 60px;
+  background: var(--background-light);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto;
+  align-items: center;
+  column-gap: var(--size);
+  padding-left: var(--size);
+  padding-right: var(--size);
+}
+
+.sam-card {
+  padding: var(--size);
+  background: var(--background-light);
+  border-radius: 8px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}

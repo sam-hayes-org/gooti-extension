@@ -1,0 +1,14 @@
+:host {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--size);
+  overflow-y: auto;
+  padding-left: var(--size);
+  padding-right: var(--size);
+
+  .file-input {
+    position: absolute;
+    visibility: hidden;
+  }
+}

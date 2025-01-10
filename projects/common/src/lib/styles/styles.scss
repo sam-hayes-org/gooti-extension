@@ -1,0 +1,17 @@
+@use "_flex.scss";
+@use "_common.scss";
+@use "_typography.scss";
+@use "_spacing.scss";
+@use "_color.scss";
+
+:root {
+  --size-2: 32px;
+  --size: 16px;
+  --size-h: 8px;
+
+  --background: #161c26;
+  --background-light: #202733;
+  --background-light-hover: #383844;
+  --border: #525b6a;
+  --primary: #0d6efd;
+}

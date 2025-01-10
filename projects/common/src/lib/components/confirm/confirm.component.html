@@ -1,0 +1,28 @@
+<!-- eslint-disable @angular-eslint/template/elements-content -->
+<div [id]="idString" class="modal fade" data-bs-backdrop="static" tabindex="-1">
+  <div
+    class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable"
+  >
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Please confirm</h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="modal?.hide(); no.emit()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <span>{{ message }}</span>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal?.hide()">
+          No
+        </button>
+        <button type="button" class="btn btn-primary" (click)="onClickYes()">
+          Yes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

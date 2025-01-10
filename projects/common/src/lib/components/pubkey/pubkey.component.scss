@@ -1,0 +1,6 @@
+:host {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  column-gap: calc(var(--size) / 2);
+}

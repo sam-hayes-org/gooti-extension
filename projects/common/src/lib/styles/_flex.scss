@@ -1,0 +1,38 @@
+.sam-flex-column {
+  display: flex;
+  flex-direction: column;
+
+  &.gap {
+    row-gap: var(--size);
+  }
+
+  &.gap-h {
+    row-gap: var(--size-h);
+  }
+
+  &.center {
+    align-items: center;
+  }
+}
+
+.sam-flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  &.gap {
+    column-gap: var(--size);
+  }
+
+  &.gap-h {
+    column-gap: var(--size-h);
+  }
+}
+
+.sam-flex-grow {
+  flex-grow: 1;
+}
+
+.sam-align-self-center {
+  align-self: center;
+}
