@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Gooti",
+  "description": "Nostr Identity Manager & Signer",
+  "version": "0.0.1",
+  "homepage_url": "https://getgooti.com",
+  "permissions": [
+    "activeTab",
+    "windows",
+    "storage"
+  ],
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "gooti-with-bg.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "run_at": "document_start",
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "gooti-content-script.js"
+      ],
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "gooti-extension.js"
+      ],
+      "matches": [
+        "https://*/*",
+        "http://localhost:*/*",
+        "http://0.0.0.0:*/*",
+        "http://127.0.0.1:*/*",
+        "http://*.localhost/*"
+      ]
+    }
+  ]
+}

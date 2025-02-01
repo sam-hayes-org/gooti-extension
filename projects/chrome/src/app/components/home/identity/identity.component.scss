@@ -1,0 +1,41 @@
+:host {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .vertically-centered {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .name {
+    font-size: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    max-width: 343px;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .picture-frame {
+    height: 120px;
+    width: 120px;
+    border: 2px solid white;
+    border-radius: 100%;
+    &.padding {
+      padding: 12px;
+    }
+
+    img {
+      border-radius: 100%;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .color-activity {
+    color: var(--bs-border-color);
+  }
+}

@@ -1,0 +1,31 @@
+:host {
+  border-radius: 4px;
+  padding: 0px 4px;
+  font-size: 12px;
+  text-align: center;
+  border: 1px solid transparent;
+  min-width: 40px;
+  min-height: 20px;
+
+  cursor: pointer;
+
+  &.read {
+    &:not(.is-selected) {
+      border: 1px solid var(--bs-green);
+    }
+
+    &.is-selected {
+      background: var(--bs-green);
+    }
+  }
+
+  &:not(.read) {
+    &:not(.is-selected) {
+      border: 1px solid var(--bs-primary);
+    }
+
+    &.is-selected {
+      background: var(--bs-primary);
+    }
+  }
+}

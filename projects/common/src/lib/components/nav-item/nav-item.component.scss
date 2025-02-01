@@ -1,0 +1,23 @@
+:host {
+  cursor: pointer;
+  height: 48px;
+  min-height: 48px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-left: 16px;
+  padding-right: 8px;
+  background: var(--background-light);
+  border-radius: 8px;
+  margin-bottom: 8px;
+
+  &:hover {
+    background: var(--background-light-hover);
+  }
+
+  .text {
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

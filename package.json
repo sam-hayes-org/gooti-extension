@@ -1,12 +1,28 @@
 {
   "name": "gooti-extension",
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "custom": {
+    "chrome": {
+      "version": "0.0.1"
+    },
+    "firefox": {
+      "version": "0.0.0"
+    }
+  },
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "clean:chrome": "rimraf dist/chrome",
+    "clean:firefox": "rimraf dist/firefox",
+    "start:chrome": "ng serve chrome",
+    "start:firefox": "ng serve firefox",
+    "prepare:chrome": "./chrome_prepare_manifest.sh",
+    "build:chrome": "npm run prepare:chrome && ng build chrome",
+    "build:firefox": "ng build firefox",
+    "watch:chrome": "npm run prepare:chrome && ng build chrome --watch --configuration development",
+    "watch:firefox": "ng build firefox --watch --configuration development",
+    "test": "ng test",
+    "lint": "ng lint",
+    "prepare": "husky"
   },
   "private": true,
   "dependencies": {
@@ -18,20 +34,38 @@
     "@angular/platform-browser": "^19.0.0",
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
+    "@nostr-dev-kit/ndk": "^2.11.0",
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
+    "buffer": "^6.0.3",
+    "nostr-tools": "^2.10.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "webextension-polyfill": "^0.12.0",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
+    "@angular-builders/custom-webpack": "^19.0.0",
+    "@angular-devkit/build-angular": "^19.0.7",
     "@angular/cli": "^19.0.7",
     "@angular/compiler-cli": "^19.0.0",
+    "@types/bootstrap": "^5.2.10",
+    "@types/chrome": "^0.0.293",
     "@types/jasmine": "~5.1.0",
+    "@types/webextension-polyfill": "^0.12.1",
+    "angular-eslint": "19.0.2",
+    "eslint": "^9.16.0",
+    "husky": "^9.1.7",
     "jasmine-core": "~5.4.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "~5.6.2"
+    "ng-packagr": "^19.0.0",
+    "rimraf": "^6.0.1",
+    "typescript": "~5.6.2",
+    "typescript-eslint": "8.18.0"
   }
 }

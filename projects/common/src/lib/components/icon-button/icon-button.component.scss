@@ -1,0 +1,18 @@
+:host {
+  .icon-button {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    //padding: 10px;
+
+    border-radius: 100%;
+
+    cursor: pointer;
+
+    &:hover {
+      background: gray;
+    }
+  }
+}

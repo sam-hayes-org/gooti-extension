@@ -1,0 +1,37 @@
+<div class="sam-text-header">
+  <span> Gooti </span>
+</div>
+
+<span>Version {{ version }}</span>
+
+<br />
+
+<span> Website </span>
+<a href="https://getgooti.com" target="_blank">www.getgooti.com</a>
+
+<br />
+
+<span> Source code</span>
+<a
+  href="https://github.com/sam-hayes-org/gooti-extension"
+  target="_blank"
+>
+  github.com/sam-hayes-org/gooti-extension
+</a>
+
+<div class="sam-flex-grow"></div>
+
+<div class="sam-card sam-mb" style="align-items: center">
+  <span>
+    Made with <i class="bi bi-heart-fill" style="color: red"></i> by
+    <a href="https://sam-hayes.org" target="_blank">Sam Hayes</a>
+  </span>
+
+  <lib-pubkey
+    class="sam-mt-h"
+    value="npub1tgyjshvelwj73t3jy0n3xllgt03elkapfl3k3n0x2wkunegkgrwssfp0u4"
+    (click)="toast.show('Copied to clipboard')"
+  ></lib-pubkey>
+</div>
+
+<lib-toast #toast [bottom]="188"></lib-toast>
