@@ -6,7 +6,7 @@
       "version": "0.0.2"
     },
     "firefox": {
-      "version": "0.0.0"
+      "version": "0.0.1"
     }
   },
   "scripts": {
@@ -16,10 +16,11 @@
     "start:chrome": "ng serve chrome",
     "start:firefox": "ng serve firefox",
     "prepare:chrome": "./chrome_prepare_manifest.sh",
+    "prepare:firefox": "./firefox_prepare_manifest.sh",
     "build:chrome": "npm run prepare:chrome && ng build chrome",
-    "build:firefox": "ng build firefox",
+    "build:firefox": "npm run prepare:firefox && ng build firefox",
     "watch:chrome": "npm run prepare:chrome && ng build chrome --watch --configuration development",
-    "watch:firefox": "ng build firefox --watch --configuration development",
+    "watch:firefox": "npm run prepare:firefox && ng build firefox --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
     "prepare": "husky"

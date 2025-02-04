@@ -1,0 +1,19 @@
+:host {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-left: var(--size);
+  padding-right: var(--size);
+
+  .header-pane {
+    display: flex;
+    flex-direction: row;
+    column-gap: var(--size-h);
+    align-items: center;
+    padding-bottom: var(--size);
+    background-color: var(--background);
+    position: sticky;
+    top: 0;
+  }
+}

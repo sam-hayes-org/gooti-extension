@@ -1,0 +1,56 @@
+<!-- eslint-disable @angular-eslint/template/interactive-supports-focus -->
+<div class="sam-text-header">
+  <span>You</span>
+</div>
+
+<div class="vertically-centered">
+  <div class="sam-flex-column center">
+    <div class="sam-flex-column gap center">
+      <div class="picture-frame" [class.padding]="!loadedData.profile?.image">
+        <img
+          [src]="
+            !loadedData.profile?.image
+              ? 'person-fill.svg'
+              : loadedData.profile?.image
+          "
+          alt=""
+        />
+      </div>
+
+      <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events -->
+      <span class="name" (click)="onClickShowDetails()">
+        {{ selectedIdentity?.nick }}
+      </span>
+
+      @if(loadedData.profile) {
+      <div class="sam-flex-row gap-h">
+        @if(loadedData.validating) {
+        <i class="bi bi-circle color-activity"></i>
+        } @else { @if(loadedData.nip05isValidated) {
+        <i class="bi bi-patch-check sam-color-primary"></i>
+        } @else {
+        <i class="bi bi-exclamation-octagon-fill sam-color-danger"></i>
+        } }
+
+        <span class="sam-color-primary">{{
+          loadedData.profile.nip05 | visualNip05
+        }}</span>
+      </div>
+      } @else {
+      <span>&nbsp;</span>
+      }
+
+      <lib-pubkey
+        [value]="selectedIdentityNpub ?? 'na'"
+        [first]="14"
+        [last]="8"
+        (click)="
+          copyToClipboard(selectedIdentityNpub);
+          toast.show('Copied to clipboard')
+        "
+      ></lib-pubkey>
+    </div>
+  </div>
+</div>
+
+<lib-toast #toast></lib-toast>

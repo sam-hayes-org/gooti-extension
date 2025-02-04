@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html data-bs-theme="dark">
+  <head>
+    <title>Gooti - Options</title>
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+    <script src="scripts.js"></script>
+    <style>
+      body {
+        background: var(--background);
+        height: 100vh;
+        width: 100vw;
+        color: #ffffff;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+
+      .page {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-y: auto;
+      }
+
+      .container {
+        max-width: 1200px;
+        box-sizing: border-box;
+        width: 100%;
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      .logo {
+        height: 60px;
+        width: 60px;
+        border-radius: 100%;
+        border: 2px solid var(--primary);
+
+        img {
+          height: 100%;
+          width: 100%;
+        }
+      }
+
+      .brand-name {
+        font-weight: 700;
+        font-size: 1.5rem;
+        letter-spacing: 4px;
+        color: #b9d6ff;
+      }
+
+      .main-header {
+        padding-top: 50px;
+        font-size: 50px;
+        font-weight: 500;
+      }
+
+      .sub-header {
+        padding-top: 28px;
+        font-size: 20px;
+        max-width: 460px;
+        text-align: right;
+        line-height: 1.4;
+
+        .accent {
+          color: #d63384;
+          border: 1px solid #d63384;
+          border-radius: 4px;
+          padding: 2px 4px;
+        }
+      }
+
+      .middle {
+        margin-top: 68px;
+        width: 100%;
+        background: var(--background-light);
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        padding-bottom: 24px;
+      }
+
+      .option-label {
+        font-size: 20px;
+        margin-bottom: 0px;
+        margin-top: 16px;
+      }
+
+      .option-text {
+        color: gray;
+
+        margin-top: 4px;
+      }
+
+      .snapshots-list {
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="container sam-flex-row gap" style="margin-top: 16px">
+        <div class="logo">
+          <img src="gooti.svg" alt="" />
+        </div>
+        <span class="brand-name">Gooti</span>
+        <span>OPTIONS</span>
+      </div>
+
+      <div class="container sam-flex-column center">
+        <span class="main-header"> Nostr Identity Manager & Signer </span>
+        <span class="sub-header">
+          Manage and switch between
+          <span class="accent">multiple identities</span>
+          while interacting with Nostr apps
+        </span>
+      </div>
+
+      <div class="middle">
+        <div class="container sam-flex-column">
+          <!-- VAULT SNAPSHOTS -->
+          <span class="option-label">Vault Snapshots</span>
+          <span class="option-text">
+            Importing a previously exported vault snapshot is not
+            <b>directly</b>
+            possible in the extension's popup window. This is due to the
+            browser's limitation of automatically closing the popup when it
+            looses focus, making it impossible to drop or select a file there.
+          </span>
+          <span class="option-text">
+            To circumvent this limitation, you need to upload your snapshot here
+            and make it available for the extension to import in the popup.
+          </span>
+          <span class="option-text">
+            <b>
+              Uploading a snapshot here does NOT automatically start an import!
+            </b>
+          </span>
+          <span class="option-text">
+            <b>
+              The data remains inside this browser and is NOT uploaded to any
+              server!
+            </b>
+          </span>
+
+          <div class="sam-mt-h sam-flex-row gap">
+            <button id="uploadSnapshotsButton" class="btn btn-primary">
+              Upload Snapshots
+            </button>
+
+            <button id="deleteSnapshotsButton" class="btn btn-danger">
+              Delete Snapshots
+            </button>
+          </div>
+
+          <ul id="snapshotsList" class="snapshots-list">
+            <!-- will be filled by JS -->
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <input
+      id="uploadSnapshotInput"
+      type="file"
+      multiple
+      style="position: absolute; top: 0; display: none"
+      accept=".json"
+    />
+    <script src="options.js"></script>
+  </body>
+</html>

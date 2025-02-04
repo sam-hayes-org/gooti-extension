@@ -1,0 +1,17 @@
+:host {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .vertically-centered {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .file-input {
+    position: absolute;
+    visibility: hidden;
+  }
+}

@@ -1,0 +1,28 @@
+<lib-nav-item text="Keys" (click)="onClickNavigateTo('keys')"></lib-nav-item>
+
+<lib-nav-item
+  text="Relays"
+  (click)="onClickNavigateTo('relays')"
+></lib-nav-item>
+
+<lib-nav-item
+  text="Permissions"
+  (click)="onClickNavigateTo('permissions')"
+></lib-nav-item>
+
+<div class="sam-flex-grow"></div>
+
+<button
+  type="button"
+  class="btn btn-danger"
+  (click)="
+    confirm.show(
+      'Do you really want to delete this identity?',
+      onConfirmDeletion.bind(this)
+    )
+  "
+>
+  Delete Identity
+</button>
+
+<lib-confirm #confirm> </lib-confirm>
