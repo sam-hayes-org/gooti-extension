@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { LoggerService } from '@common';
-import { StartupService } from './services/startup/startup.service';
+import { LoggerService, StartupService } from '@common';
+import { getNewStorageServiceConfig } from './common/data/get-new-storage-service-config';
 
 @Component({
   selector: 'app-root',
@@ -15,6 +15,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     this.#logger.initialize('Gooti Chrome Extension');
-    this.#startup.startOver();
+
+    this.#startup.startOver(getNewStorageServiceConfig());
   }
 }
