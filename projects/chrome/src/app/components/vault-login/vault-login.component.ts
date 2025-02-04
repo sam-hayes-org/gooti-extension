@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ConfirmComponent, StorageService } from '@common';
-import { StartupService } from '../../services/startup/startup.service';
+import { ConfirmComponent, StartupService, StorageService } from '@common';
+import { getNewStorageServiceConfig } from '../../common/data/get-new-storage-service-config';
 
 @Component({
   selector: 'app-vault-login',
@@ -46,7 +46,7 @@ export class VaultLoginComponent {
   async onClickDeleteVault() {
     try {
       await this.#storage.deleteVault();
-      this.#startup.startOver();
+      this.#startup.startOver(getNewStorageServiceConfig());
     } catch (error) {
       console.log(error);
       // TODO

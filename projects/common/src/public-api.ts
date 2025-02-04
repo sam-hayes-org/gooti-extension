@@ -21,6 +21,7 @@ export * from './lib/services/storage/browser-sync-handler';
 export * from './lib/services/storage/browser-session-handler';
 export * from './lib/services/storage/gooti-meta-handler';
 export * from './lib/services/logger/logger.service';
+export * from './lib/services/startup/startup.service';
 
 // Components
 export * from './lib/components/icon-button/icon-button.component';

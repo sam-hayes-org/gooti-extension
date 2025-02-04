@@ -5,7 +5,6 @@
   "version": "0.0.1",
   "homepage_url": "https://getgooti.com",
   "permissions": [
-    "activeTab",
     "windows",
     "storage"
   ],
