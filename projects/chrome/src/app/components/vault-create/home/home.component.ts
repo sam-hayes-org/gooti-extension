@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { BrowserSyncData, StorageService } from '@common';
-import { StartupService } from '../../../services/startup/startup.service';
+import { BrowserSyncData, StartupService, StorageService } from '@common';
+import { getNewStorageServiceConfig } from '../../../common/data/get-new-storage-service-config';
 
 @Component({
   selector: 'app-home',
@@ -27,7 +27,7 @@ export class HomeComponent {
       console.log(vault);
 
       await this.#storage.importVault(vault);
-      this.#startup.startOver();
+      this.#startup.startOver(getNewStorageServiceConfig());
     } catch (error) {
       console.log(error);
       // TODO

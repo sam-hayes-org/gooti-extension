@@ -1,10 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { LoggerService, StorageService, StorageServiceConfig } from '@common';
-import { ChromeSessionHandler } from '../../common/data/chrome-session-handler';
-import { ChromeSyncYesHandler } from '../../common/data/chrome-sync-yes-handler';
-import { ChromeSyncNoHandler } from '../../common/data/chrome-sync-no-handler';
-import { ChromeMetaHandler } from '../../common/data/chrome-meta-handler';
 import { Router } from '@angular/router';
+import { LoggerService } from '../logger/logger.service';
+import {
+  StorageService,
+  StorageServiceConfig,
+} from '../storage/storage.service';
 
 @Injectable({
   providedIn: 'root',
@@ -14,14 +14,7 @@ export class StartupService {
   readonly #storage = inject(StorageService);
   readonly #router = inject(Router);
 
-  async startOver() {
-    const storageConfig: StorageServiceConfig = {
-      browserSessionHandler: new ChromeSessionHandler(),
-      browserSyncYesHandler: new ChromeSyncYesHandler(),
-      browserSyncNoHandler: new ChromeSyncNoHandler(),
-      gootiMetaHandler: new ChromeMetaHandler(),
-    };
-
+  async startOver(storageConfig: StorageServiceConfig) {
     this.#storage.initialize(storageConfig);
 
     // Step 0:

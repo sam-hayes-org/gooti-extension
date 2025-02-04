@@ -4,9 +4,10 @@ import {
   BrowserSyncFlow,
   ConfirmComponent,
   DateHelper,
+  StartupService,
   StorageService,
 } from '@common';
-import { StartupService } from '../../../services/startup/startup.service';
+import { getNewStorageServiceConfig } from '../../../common/data/get-new-storage-service-config';
 
 @Component({
   selector: 'app-settings',
@@ -43,7 +44,7 @@ export class SettingsComponent implements OnInit {
   async onDeleteVault() {
     try {
       await this.#storage.deleteVault();
-      this.#startup.startOver();
+      this.#startup.startOver(getNewStorageServiceConfig());
     } catch (error) {
       console.log(error);
       // TODO
@@ -68,7 +69,7 @@ export class SettingsComponent implements OnInit {
       await this.#storage.deleteVault(true);
       await this.#storage.importVault(vault);
       this.#storage.isInitialized = false;
-      this.#startup.startOver();
+      this.#startup.startOver(getNewStorageServiceConfig());
     } catch (error) {
       console.log(error);
       // TODO
