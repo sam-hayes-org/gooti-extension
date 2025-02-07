@@ -1,12 +1,12 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
+  IconButtonComponent,
   NavComponent,
   NostrHelper,
   StorageService,
   ToastComponent,
 } from '@common';
-import { IconButtonComponent } from '../../../../../../common/src/lib/components/icon-button/icon-button.component';
 import { FormsModule } from '@angular/forms';
 
 interface CustomIdentity {

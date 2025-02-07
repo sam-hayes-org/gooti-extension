@@ -7,9 +7,12 @@
     "types": []
   },
   "files": [
-    "src/main.ts"
+    "src/main.ts",
+    "src/background.ts",
+    "src/gooti-extension.ts",
+    "src/gooti-content-script.ts",
+    "src/prompt.ts",
+    "src/options.ts"
   ],
-  "include": [
-    "src/**/*.d.ts"
-  ]
+  "include": ["src/**/*.d.ts"]
 }

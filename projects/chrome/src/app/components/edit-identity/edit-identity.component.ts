@@ -1,6 +1,10 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
-import { IconButtonComponent, Identity_DECRYPTED, StorageService } from '@common';
+import {
+  IconButtonComponent,
+  Identity_DECRYPTED,
+  StorageService,
+} from '@common';
 
 @Component({
   selector: 'app-edit-identity',

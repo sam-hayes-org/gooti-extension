@@ -23,7 +23,15 @@ export class ChromeMetaHandler extends GootiMetaHandler {
     await chrome.storage.local.set(data);
   }
 
-  async clearData(): Promise<void> {
-    await chrome.storage.local.remove(this.metaProperties);
+  async clearData(keep: string[]): Promise<void> {
+    const toBeRemovedProperties: string[] = [];
+
+    for (const property of this.metaProperties) {
+      if (!keep.includes(property)) {
+        toBeRemovedProperties.push(property);
+      }
+    }
+
+    await chrome.storage.local.remove(toBeRemovedProperties);
   }
 }

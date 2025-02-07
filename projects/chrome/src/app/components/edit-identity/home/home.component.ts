@@ -1,7 +1,11 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { NavItemComponent } from '../../../../../../common/src/lib/components/nav-item/nav-item.component';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ConfirmComponent, Identity_DECRYPTED, StorageService } from '@common';
+import {
+  ConfirmComponent,
+  Identity_DECRYPTED,
+  NavItemComponent,
+  StorageService,
+} from '@common';
 
 @Component({
   selector: 'app-home',

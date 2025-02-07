@@ -1,0 +1,13 @@
+<div class="custom-header">
+  <lib-icon-button
+    class="button"
+    icon="chevron-left"
+    (click)="onClickCancel()"
+  ></lib-icon-button>
+
+  <span class="text">{{ identity?.nick }} </span>
+</div>
+
+<div class="edit-identity-outlet">
+  <router-outlet></router-outlet>
+</div>

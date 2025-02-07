@@ -4,6 +4,7 @@ import {
   BrowserSyncFlow,
   ConfirmComponent,
   DateHelper,
+  NavComponent,
   StartupService,
   StorageService,
 } from '@common';
@@ -15,7 +16,7 @@ import { getNewStorageServiceConfig } from '../../../common/data/get-new-storage
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
-export class SettingsComponent implements OnInit {
+export class SettingsComponent extends NavComponent implements OnInit {
   syncFlow: string | undefined;
 
   readonly #storage = inject(StorageService);
@@ -41,9 +42,9 @@ export class SettingsComponent implements OnInit {
     }
   }
 
-  async onDeleteVault() {
+  async onResetExtension() {
     try {
-      await this.#storage.deleteVault();
+      await this.#storage.resetExtension();
       this.#startup.startOver(getNewStorageServiceConfig());
     } catch (error) {
       console.log(error);

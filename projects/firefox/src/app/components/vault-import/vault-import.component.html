@@ -1,0 +1,39 @@
+<div class="custom-header">
+  <lib-icon-button
+    class="button"
+    icon="chevron-left"
+    (click)="navigateBack()"
+  ></lib-icon-button>
+
+  <span class="text">Import Vault </span>
+</div>
+
+<div class="sam-pl sam-pr sam-flex-column gap">
+  <span class="sam-text-muted">
+    You can select any snapshot that you have previously uploaded on the
+    <a href="options.html" target="_blank">options page</a>.
+  </span>
+
+  <select class="form-select sam-text-sm" [(ngModel)]="selectedSnapshot">
+    @for(snapshot of snapshots; track snapshot) {
+    <option [ngValue]="snapshot">
+      <span>{{ snapshot.fileName }}</span>
+    </option>
+    }
+  </select>
+
+  <span class="sam-text-muted" style="font-size: 12px">
+    Please note that your data will be imported regarding your current SYNC
+    setting: <b>{{ syncText }}</b>
+  </span>
+</div>
+
+<div class="sam-flex-grow"></div>
+
+<button
+  [disabled]="!selectedSnapshot"
+  class="import-button btn btn-primary"
+  (click)="onClickImport()"
+>
+  Import
+</button>

@@ -1,0 +1,34 @@
+<div class="sam-text-header">
+  <span>Gooti</span>
+</div>
+
+<div class="vertically-centered">
+  <div class="sam-flex-column center">
+    <div class="sam-flex-column gap" style="align-items: center">
+      <div class="logo-frame">
+        <img src="gooti.svg" height="120" width="120" alt="" />
+      </div>
+
+      <button
+        type="button"
+        class="sam-mt-2 btn btn-primary"
+        (click)="router.navigateByUrl('/vault-create/new')"
+      >
+        <div class="sam-flex-row gap-h">
+          <i class="bi bi-plus-circle" style="height: 22px"></i>
+          <span>Create a new vault</span>
+        </div>
+      </button>
+
+      <span class="sam-text-muted">or</span>
+
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="router.navigateByUrl('/vault-import')"
+      >
+        <span>Import a vault</span>
+      </button>
+    </div>
+  </div>
+</div>

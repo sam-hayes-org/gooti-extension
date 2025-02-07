@@ -79,6 +79,17 @@ export interface BrowserSessionData {
   relays: Relay_DECRYPTED[];
 }
 
+export interface GootiMetaData_VaultSnapshot {
+  fileName: string;
+  data: BrowserSyncData;
+}
+
+export const GOOTI_META_DATA_KEY = {
+  vaultSnapshots: 'vaultSnapshots',
+};
+
 export interface GootiMetaData {
   syncFlow?: number; // 0 = no sync, 1 = browser sync, (future: 2 = Gooti sync, 3 = Custom sync (bring your own sync))
+
+  vaultSnapshots?: GootiMetaData_VaultSnapshot[];
 }

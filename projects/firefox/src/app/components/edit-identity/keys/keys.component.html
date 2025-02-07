@@ -1,0 +1,141 @@
+<div class="header-pane">
+  <lib-icon-button
+    icon="chevron-left"
+    (click)="navigateBack()"
+  ></lib-icon-button>
+  <span>Keys</span>
+</div>
+
+@if(identity) {
+<span>Public Key</span>
+
+<!-- PUBKEY NPUB -->
+<div class="sam-mt-h sam-flex-row gap">
+  <span class="text-muted" style="width: 48px">NPUB</span>
+  <div class="input-group">
+    <input
+      id="pubkeyNpubInput"
+      #pubkeyNpubInput
+      type="text"
+      class="form-control"
+      [ngModel]="identity.pubkeyNpub"
+      [readOnly]="true"
+    />
+    <button
+      class="btn btn-outline-secondary"
+      type="button"
+      (click)="
+        copyToClipboard(identity.pubkeyNpub); toast.show('Copied to clipboard')
+      "
+    >
+      <i
+        class="bi bi-copy"
+        [class.bi-eye]="pubkeyNpubInput.type === 'password'"
+        [class.bi-eye-slash]="pubkeyNpubInput.type === 'text'"
+      ></i>
+    </button>
+  </div>
+</div>
+
+<!-- PUBKEY HEX -->
+<div class="sam-mt-h sam-flex-row gap">
+  <span class="text-muted" style="width: 48px">HEX</span>
+  <div class="input-group">
+    <input
+      id="pubkeyHexInput"
+      #pubkeyHexInput
+      type="text"
+      class="form-control"
+      [ngModel]="identity.pubkeyHex"
+      [readOnly]="true"
+    />
+    <button
+      class="btn btn-outline-secondary"
+      type="button"
+      (click)="
+        copyToClipboard(identity.pubkeyHex); toast.show('Copied to clipboard')
+      "
+    >
+      <i
+        class="bi bi-copy"
+        [class.bi-eye]="pubkeyHexInput.type === 'password'"
+        [class.bi-eye-slash]="pubkeyHexInput.type === 'text'"
+      ></i>
+    </button>
+  </div>
+</div>
+
+<span class="sam-mt-2">Private Key</span>
+
+<!-- PRIVATE NSEC -->
+<div class="sam-mt-h sam-flex-row gap">
+  <span class="text-muted" style="width: 48px">NSEC</span>
+  <div class="input-group">
+    <input
+      id="privkeyNsecInput"
+      #privkeyNsecInput
+      type="password"
+      class="form-control"
+      [ngModel]="identity.privkeyNsec"
+      [readOnly]="true"
+    />
+    <button
+      class="btn btn-outline-secondary"
+      type="button"
+      (click)="
+        copyToClipboard(identity.privkeyNsec); toast.show('Copied to clipboard')
+      "
+    >
+      <i class="bi bi-copy"></i>
+    </button>
+    <button
+      class="btn btn-outline-secondary"
+      type="button"
+      (click)="toggleType(privkeyNsecInput)"
+    >
+      <i
+        class="bi bi-eye"
+        [class.bi-eye]="privkeyNsecInput.type === 'password'"
+        [class.bi-eye-slash]="privkeyNsecInput.type === 'text'"
+      ></i>
+    </button>
+  </div>
+</div>
+
+<!-- PRIVATE HEX -->
+<div class="sam-mt-h sam-flex-row gap">
+  <span class="text-muted" style="width: 48px">HEX</span>
+  <div class="input-group">
+    <input
+      id="privkeyHexInput"
+      #privkeyHexInput
+      type="password"
+      class="form-control"
+      [ngModel]="identity.privkeyHex"
+      [readOnly]="true"
+    />
+    <button
+      class="btn btn-outline-secondary"
+      type="button"
+      (click)="
+        copyToClipboard(identity.privkeyHex); toast.show('Copied to clipboard')
+      "
+    >
+      <i class="bi bi-copy"></i>
+    </button>
+    <button
+      class="btn btn-outline-secondary"
+      type="button"
+      (click)="toggleType(privkeyHexInput)"
+    >
+      <i
+        class="bi bi-eye"
+        [class.bi-eye]="privkeyHexInput.type === 'password'"
+        [class.bi-eye-slash]="privkeyHexInput.type === 'text'"
+      ></i>
+    </button>
+  </div>
+</div>
+}
+
+<lib-toast #toast [bottom]="16"></lib-toast>

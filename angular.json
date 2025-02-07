@@ -121,11 +121,14 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:application",
+          "builder": "@angular-builders/custom-webpack:browser",
           "options": {
+            "customWebpackConfig": {
+              "path": "projects/firefox/custom-webpack.config.ts"
+            },
             "outputPath": "dist/firefox",
             "index": "projects/firefox/src/index.html",
-            "browser": "projects/firefox/src/main.ts",
+            "main": "projects/firefox/src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "projects/firefox/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -136,15 +139,15 @@
               }
             ],
             "styles": ["projects/firefox/src/styles.scss"],
-            "scripts": []
+            "scripts": ["node_modules/bootstrap/dist/js/bootstrap.bundle.js"]
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "5MB",
+                  "maximumError": "10MB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -152,7 +155,11 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "optimization": {
+                "scripts": true,
+                "styles": false,
+                "fonts": true
+              }
             },
             "development": {
               "optimization": false,
@@ -191,6 +198,16 @@
             ],
             "styles": ["projects/firefox/src/styles.scss"],
             "scripts": []
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/firefox/**/*.ts",
+              "projects/firefox/**/*.html"
+            ],
+            "eslintConfig": "projects/firefox/eslint.config.js"
           }
         }
       }
