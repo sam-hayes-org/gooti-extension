@@ -15,6 +15,7 @@ import { HomeComponent as EditIdentityHomeComponent } from './components/edit-id
 import { KeysComponent as EditIdentityKeysComponent } from './components/edit-identity/keys/keys.component';
 import { PermissionsComponent as EditIdentityPermissionsComponent } from './components/edit-identity/permissions/permissions.component';
 import { RelaysComponent as EditIdentityRelaysComponent } from './components/edit-identity/relays/relays.component';
+import { VaultImportComponent } from './components/vault-import/vault-import.component';
 
 export const routes: Routes = [
   {
@@ -38,6 +39,10 @@ export const routes: Routes = [
         component: VaultCreateNewComponent,
       },
     ],
+  },
+  {
+    path: 'vault-import',
+    component: VaultImportComponent,
   },
   {
     path: 'home',

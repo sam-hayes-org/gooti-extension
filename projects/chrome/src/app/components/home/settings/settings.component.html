@@ -8,15 +8,7 @@
   Export Vault
 </button>
 
-<button
-  class="btn btn-primary"
-  (click)="
-    confirm.show(
-      'Do you really want to import a vault? All existing data will be overwritten.',
-      onImportVault.bind(fileInput)
-    )
-  "
->
+<button class="btn btn-primary" (click)="navigate('/vault-import')">
   Import Vault
 </button>
 
@@ -26,12 +18,12 @@
   class="btn btn-danger"
   (click)="
     confirm.show(
-      'Do you really want to delete your vault with all identities?',
-      onDeleteVault.bind(this)
+      'Do you really want to reset your extension? Every data will be lost.',
+      onResetExtension.bind(this)
     )
   "
 >
-  Delete Vault
+  Reset Extension
 </button>
 
 <lib-confirm #confirm> </lib-confirm>

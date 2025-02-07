@@ -39,5 +39,5 @@ export abstract class GootiMetaHandler {
     await this.saveFullData(this.#gootiMetaData);
   }
 
-  abstract clearData(): Promise<void>;
+  abstract clearData(keep: string[]): Promise<void>;
 }

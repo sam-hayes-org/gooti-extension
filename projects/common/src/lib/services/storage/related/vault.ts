@@ -120,7 +120,6 @@ export const deleteVault = async function (
 
   await this.getBrowserSyncHandler().clearData();
   await this.getBrowserSessionHandler().clearData();
-  await this.getGootiMetaHandler().clearData();
 
   if (!doNotSetIsInitializedToFalse) {
     this.isInitialized = false;
