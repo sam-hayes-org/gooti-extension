@@ -19,21 +19,17 @@ async window.nostr.nip04.encrypt(pubkey, plaintext): string
 async window.nostr.nip04.decrypt(pubkey, ciphertext): string
 ```
 
-The repository is configured to hold the extensions for Chrome and Firefox. While the Chrome extension is yet already available, the Firefox extension will follow later.
-
-[Chrome Extension](https://chromewebstore.google.com/detail/cgikhnoggbhdblnckhcahgkipmiiohbk)
-
-Firefox Extension (yet to come)
+The repository is configured as monorepo to hold the extensions for Chrome and Firefox. 
 
 ## Develop Chrome Extension
 
-To run the Chrome extension from this code:
+To build and run the Chrome extension from this code:
 
 ```
 git clone https://github.com/sam-hayes-org/gooti-extension
 cd gooti-extension
-npm i
-npm run watch:chrome
+npm ci
+npm run build:chrome
 ```
 
 then
@@ -41,7 +37,25 @@ then
 1. within Chrome go to `chrome://extensions`
 2. ensure "developer mode" is enabled on the top right
 3. click on "Load unpackaged"
-4. select the `dist/chrome` folder of this repository
+4. select the `dist/chrome` folder
+
+## Develop Firefox Extension
+
+To build and run the Firefox extension from this code:
+
+```
+git clone https://github.com/sam-hayes-org/gooti-extension
+cd gooti-extension
+npm ci
+npm run build:firefox
+```
+
+then
+
+1. within Firefox go to `about://debugging`
+2. click "This Firefox" on the left
+3. click on "Load Temporary Add-on..."
+4. select the `dist/firefox` folder
 
 ---
 
