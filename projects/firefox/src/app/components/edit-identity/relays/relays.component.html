@@ -1,0 +1,79 @@
+<!-- RELAY_TEMPLATE -->
+<ng-template #relayTemplate let-relay="relay">
+  <div class="sam-flex-row gap relay">
+    <div class="sam-flex-column sam-flex-grow">
+      <span>{{ relay.url | visualRelay }}</span>
+      <div class="sam-flex-row gap-h">
+        <lib-relay-rw
+          type="read"
+          [(model)]="relay.read"
+          (modelChange)="onRelayChanged(relay)"
+        ></lib-relay-rw>
+        <lib-relay-rw
+          type="write"
+          [(model)]="relay.write"
+          (modelChange)="onRelayChanged(relay)"
+        ></lib-relay-rw>
+      </div>
+    </div>
+
+    <lib-icon-button
+      icon="trash"
+      title="Remove relay"
+      (click)="onClickRemoveRelay(relay)"
+      style="margin-top: 4px"
+    ></lib-icon-button>
+  </div>
+</ng-template>
+
+<div class="header-pane">
+  <lib-icon-button
+    icon="chevron-left"
+    (click)="navigateBack()"
+  ></lib-icon-button>
+  <span>Relays</span>
+</div>
+
+<div class="sam-mb-2 sam-flex-row gap">
+  <div class="sam-flex-column sam-flex-grow">
+    <input
+      type="text"
+      (focus)="addRelayInputHasFocus = true"
+      (blur)="addRelayInputHasFocus = false"
+      [placeholder]="addRelayInputHasFocus ? 'server.com' : 'Add a relay'"
+      class="form-control"
+      [(ngModel)]="newRelay.url"
+      (ngModelChange)="evaluateCanAdd()"
+    />
+    <div class="sam-flex-row gap-h" style="margin-top: 4px">
+      <lib-relay-rw
+        class="sam-flex-grow"
+        type="read"
+        [(model)]="newRelay.read"
+        (modelChange)="evaluateCanAdd()"
+      ></lib-relay-rw>
+      <lib-relay-rw
+        class="sam-flex-grow"
+        type="write"
+        [(model)]="newRelay.write"
+        (modelChange)="evaluateCanAdd()"
+      ></lib-relay-rw>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    class="btn btn-primary"
+    style="height: 100%"
+    (click)="onClickAddRelay()"
+    [disabled]="!canAdd"
+  >
+    Add
+  </button>
+</div>
+
+@for(relay of relays; track relay) {
+<ng-container
+  *ngTemplateOutlet="relayTemplate; context: { relay: relay }"
+></ng-container>
+}

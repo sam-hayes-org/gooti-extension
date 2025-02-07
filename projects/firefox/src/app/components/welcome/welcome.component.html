@@ -1,0 +1,44 @@
+<div class="sam-text-header sam-mb-2">
+  <span>Gooti Setup - Sync Preference</span>
+</div>
+
+<span class="sam-text-muted sam-text-md sam-text-align-center2">
+  Gooti always encrypts sensitive data like private keys and site permissions
+  independent of the chosen sync mode.
+</span>
+
+<span class="sam-mt sam-text-lg">Sync : Mozilla Firefox</span>
+
+<span class="sam-text-muted sam-text-md sam-text-align-center2">
+  Your encrypted data is synced between browser instances. You
+  need to be signed in with your account.
+</span>
+
+<button
+  type="button"
+  class="sam-mt btn btn-primary"
+  (click)="onClickSync(true)"
+>
+  <span> Sync ON</span>
+</button>
+
+<span class="sam-mt-2 sam-text-lg">Offline</span>
+
+<span class="sam-text-muted sam-text-md">
+  Your encrypted data is never uploaded to any servers. It remains in your local
+  browser instance.
+</span>
+
+<button
+  type="button"
+  class="sam-mt sam-mb-2 btn btn-secondary"
+  (click)="onClickSync(false)"
+>
+  <span> Sync OFF</span>
+</button>
+
+<div class="sam-flex-grow"></div>
+
+<span class="sam-text-muted sam-text-md sam-mb">
+  Your preference can later be changed at any time.
+</span>

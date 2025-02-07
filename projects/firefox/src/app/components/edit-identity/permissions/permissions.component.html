@@ -1,0 +1,40 @@
+<div class="header-pane">
+  <lib-icon-button
+    icon="chevron-left"
+    (click)="navigateBack()"
+  ></lib-icon-button>
+  <span>Permissions</span>
+</div>
+
+@if(hostsPermissions.length === 0) {
+<span class="text-muted" style="font-size: 12px">
+  Nothing configured so far.
+</span>
+} @for(hostPermissions of hostsPermissions; track hostPermissions) {
+<div class="permissions-card">
+  <span style="margin-bottom: 4px; font-weight: 500">
+    {{ hostPermissions.host }}
+  </span>
+
+  @for(permission of hostPermissions.permissions; track permission) {
+  <div class="permission">
+    <span
+      [class.action-allow]="permission.methodPolicy === 'allow'"
+      [class.action-deny]="permission.methodPolicy === 'deny'"
+      >{{ permission.methodPolicy }}</span
+    >
+    <span class="text-muted">{{ permission.method }}</span>
+    @if(typeof permission.kind !== 'undefined') {
+    <span>(kind {{ permission.kind }})</span>
+    }
+    <div class="sam-flex-grow"></div>
+    <lib-icon-button
+      icon="trash"
+      title="Revoke permission"
+      (click)="onClickRevokePermission(permission)"
+    ></lib-icon-button>
+  </div>
+  }
+</div>
+
+}

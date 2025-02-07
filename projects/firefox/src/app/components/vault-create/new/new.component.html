@@ -1,0 +1,48 @@
+<div class="sam-text-header">
+  <span>Gooti</span>
+</div>
+
+<div class="content">
+  <div class="sam-flex-column gap" style="align-items: center">
+    <div class="logo-frame">
+      <img src="gooti.svg" height="120" width="120" alt="" />
+    </div>
+
+    <span class="sam-mt-2"> Please define a password for your vault. </span>
+
+    <small class="sam-text-muted">
+      Sensitive data is encypted before it is stored.
+    </small>
+
+    <div class="sam-mt input-group">
+      <input
+        #passwordInputElement
+        type="password"
+        class="form-control form-control-lg"
+        style="font-size: 1rem"
+        placeholder="vault password"
+        [(ngModel)]="password"
+      />
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+        (click)="toggleType(passwordInputElement)"
+      >
+        <i
+          class="bi bi-eye"
+          [class.bi-eye]="passwordInputElement.type === 'password'"
+          [class.bi-eye-slash]="passwordInputElement.type === 'text'"
+        ></i>
+      </button>
+    </div>
+
+    <button
+      [disabled]="!password || password.length < 4"
+      type="button"
+      class="sam-mt btn btn-primary"
+      (click)="createVault()"
+    >
+      Create vault
+    </button>
+  </div>
+</div>

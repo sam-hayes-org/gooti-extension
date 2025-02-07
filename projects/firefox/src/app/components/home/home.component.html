@@ -1,0 +1,36 @@
+<div class="tab-content">
+  <router-outlet></router-outlet>
+</div>
+
+<div class="tabs">
+  <a
+    class="tab"
+    routerLink="/home/identity"
+    routerLinkActive="active"
+    title="Your selected identity"
+  >
+    <i class="bi bi-person-circle"></i>
+  </a>
+
+  <a
+    class="tab"
+    routerLink="/home/identities"
+    routerLinkActive="active"
+    title="Identities"
+  >
+    <i class="bi bi-people-fill"></i>
+  </a>
+
+  <a
+    class="tab"
+    routerLink="/home/settings"
+    routerLinkActive="active"
+    title="Settings"
+  >
+    <i class="bi bi-gear"></i>
+  </a>
+
+  <a class="tab" routerLink="/home/info" routerLinkActive="active" title="Info">
+    <i class="bi bi-info-circle"></i>
+  </a>
+</div>

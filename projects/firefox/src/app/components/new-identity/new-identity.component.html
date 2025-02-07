@@ -1,0 +1,85 @@
+<div class="sam-text-header">
+  <span>New Identity</span>
+</div>
+
+<div class="content">
+  <input
+    id="nickElement"
+    type="text"
+    placeholder="Nick"
+    class="form-control form-control-lg"
+    style="font-size: 1rem"
+    [(ngModel)]="identity.nick"
+    autocomplete="off"
+    (ngModelChange)="validateCanSave()"
+  />
+
+  <div class="sam-mt input-group mb-3">
+    <input
+      id="privkeyInputElement"
+      #privkeyInputElement
+      type="password"
+      placeholder="Private Key (HEX or NSEC)"
+      class="form-control form-control-lg"
+      style="font-size: 1rem"
+      [(ngModel)]="identity.privkeyInput"
+      autocomplete="off"
+      (ngModelChange)="validateCanSave()"
+    />
+    <button
+      class="btn btn-outline-secondary"
+      type="button"
+      (click)="toggleType(privkeyInputElement)"
+    >
+      <i
+        class="bi bi-eye"
+        [class.bi-eye]="privkeyInputElement.type === 'password'"
+        [class.bi-eye-slash]="privkeyInputElement.type === 'text'"
+      ></i>
+    </button>
+  </div>
+
+  <button
+    class="sam-mt"
+    (click)="onClickGeneratePrivkey()"
+    type="button"
+    class="btn btn-link"
+  >
+    Generate private key
+  </button>
+</div>
+
+<div class="sam-footer-grid-2">
+  <button type="button" class="btn btn-secondary" (click)="navigateBack()">
+    Cancel
+  </button>
+
+  <button
+    [disabled]="!canSave"
+    type="button"
+    class="btn btn-primary"
+    (click)="onClickSave()"
+  >
+    Save
+  </button>
+</div>
+
+<!----------->
+<!-- ALERT -->
+<!----------->
+@if(alertMessage) {
+<div
+  style="
+    position: absolute;
+    bottom: 60px;
+    align-self: center;
+    margin-left: 16px;
+    margin-right: 16px;
+  "
+>
+  <div class="alert alert-danger sam-flex-row gap" role="alert">
+    <i class="bi bi-exclamation-triangle"></i>
+    <span>{{ alertMessage }}</span>
+  </div>
+</div>
+}

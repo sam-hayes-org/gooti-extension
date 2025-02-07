@@ -1,0 +1,78 @@
+<!-- eslint-disable @angular-eslint/template/interactive-supports-focus -->
+<!-- eslint-disable @angular-eslint/template/click-events-have-key-events -->
+<div class="custom-header" style="position: sticky; top: 0">
+  <span class="text">Identities </span>
+
+  <button class="button btn btn-primary btn-sm" (click)="onClickNewIdentity()">
+    <div class="sam-flex-row gap-h">
+      <i class="bi bi-plus-lg"></i>
+      <span>New</span>
+    </div>
+  </button>
+</div>
+
+@let sessionData = storage.getBrowserSessionHandler().browserSessionData;
+<!-- - -->
+@let identities = sessionData?.identities ?? []; @if(identities.length === 0) {
+<div
+  style="
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  "
+>
+  <span class="sam-text-muted">
+    Create your first identity by clicking on the button in the upper right
+    corner.
+  </span>
+</div>
+
+} @for(identity of identities; track identity) {
+<div
+  class="identity"
+  style="overflow: hidden"
+  (click)="onClickEditIdentity(identity)"
+>
+  @let isSelected = identity.id === sessionData?.selectedIdentityId;
+
+  <span
+    class="no-select"
+    style="overflow-x: hidden; text-overflow: ellipsis; white-space: nowrap"
+    [class.not-active]="!isSelected"
+  >
+    {{ identity.nick }}
+  </span>
+
+  <div class="sam-flex-grow"></div>
+
+  @if(isSelected) {
+  <lib-icon-button
+    icon="star-fill"
+    title="Edit identity"
+    style="pointer-events: none; color: var(--bs-pink)"
+  ></lib-icon-button>
+  }
+
+  <div class="buttons sam-flex-row gap-h">
+    @if(!isSelected) {
+    <lib-icon-button
+      icon="star-fill"
+      title="Select identity"
+      (click)="
+        onClickSwitchIdentity(identity.id, $event);
+        toast.show('Identity changed')
+      "
+    ></lib-icon-button>
+    }
+  </div>
+  <lib-icon-button
+    icon="arrow-right"
+    title="Edit identity"
+    style="pointer-events: none"
+  ></lib-icon-button>
+</div>
+}
+
+<lib-toast #toast></lib-toast>

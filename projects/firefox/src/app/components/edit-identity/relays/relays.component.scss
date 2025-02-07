@@ -1,0 +1,30 @@
+:host {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-left: var(--size);
+  padding-right: var(--size);
+
+  .header-pane {
+    display: flex;
+    flex-direction: row;
+    column-gap: var(--size-h);
+    align-items: center;
+    padding-bottom: var(--size);
+    background-color: var(--background);
+    position: sticky;
+    top: 0;
+  }
+
+  .relay {
+    margin-bottom: 4px;
+    padding: 4px 8px 6px 8px;
+    border-radius: 8px;
+    background: var(--background-light);
+
+    &:hover {
+      background: var(--background-light-hover);
+    }
+  }
+}
