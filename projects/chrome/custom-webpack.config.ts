@@ -18,5 +18,9 @@ module.exports = {
       import: 'src/prompt.ts',
       runtime: false,
     },
+    options: {
+      import: 'src/options.ts',
+      runtime: false,
+    },
   },
 } as Configuration;
