@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html data-bs-theme="dark">
+  <head>
+    <title>Gooti</title>
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+    <script src="scripts.js"></script>
+    <style>
+      body {
+        background: var(--background);
+        height: 100vh;
+        width: 100vw;
+        color: #ffffff;
+        font-size: 16px;
+      }
+
+      .color-primary {
+        color: var(--primary);
+      }
+
+      .page {
+        height: 100%;
+        display: grid;
+        grid-template-rows: 1fr 60px;
+        grid-template-columns: 1fr;
+        overflow-y: hidden;
+      }
+
+      .card {
+        padding: var(--size);
+        background: var(--background-light);
+        border-radius: 8px;
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .json {
+        white-space: pre;
+        overflow-y: auto;
+        font-size: 12px;
+        color: gray;
+      }
+
+      .text {
+        white-space: normal;
+        overflow-y: auto;
+        font-size: 12px;
+        color: gray;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="sam-flex-column" style="overflow-y: auto">
+        <div class="sam-text-header">
+          <span id="titleSpan" style="font-weight: 400 !important"></span>
+        </div>
+
+        <span
+          class="host-INSERT sam-align-self-center sam-text-muted"
+          style="font-weight: 500"
+        ></span>
+
+        <!-- Card for getPublicKey -->
+        <div id="cardGetPublicKey" class="card sam-mt sam-ml sam-mr">
+          <span style="text-align: center">
+            <b><span class="host-INSERT color-primary"></span></b>
+            is requesting permission to<br />
+            <br />
+            <b class="color-primary">read your public key</b> <br />
+            <br />
+            <span>
+              for the selected identity
+              <span
+                style="font-weight: 500"
+                class="nick-INSERT color-primary"
+              ></span>
+            </span>
+          </span>
+        </div>
+
+        <!-- Card for getRelays -->
+        <div id="cardGetRelays" class="card sam-mt sam-ml sam-mr">
+          <span style="text-align: center">
+            <b><span class="host-INSERT color-primary"></span></b>
+            is requesting permission to<br />
+            <br />
+            <b class="color-primary">read your relays</b> <br />
+            <br />
+            <span>
+              for the selected identity
+              <span
+                style="font-weight: 500"
+                class="nick-INSERT color-primary"
+              ></span>
+            </span>
+          </span>
+        </div>
+
+        <!-- Card for signEvent -->
+        <div id="cardSignEvent" class="card sam-mt sam-ml sam-mr">
+          <span style="text-align: center">
+            <b><span class="host-INSERT color-primary"></span></b>
+            is requesting permission to<br />
+            <br />
+            <b class="color-primary">sign an event</b> (kind
+            <span id="kindSpan"></span>) <br />
+            <br />
+            <span>
+              for the selected identity
+              <span
+                style="font-weight: 500"
+                class="nick-INSERT color-primary"
+              ></span>
+            </span>
+          </span>
+        </div>
+
+        <!-- Card2 for signEvent -->
+        <div id="card2SignEvent" class="card sam-mt sam-ml sam-mr">
+          <div id="card2SignEvent_json" class="json"></div>
+        </div>
+
+        <!-- Card for nip04.encrypt -->
+        <div id="cardNip04Encrypt" class="card sam-mt sam-ml sam-mr">
+          <span style="text-align: center">
+            <b><span class="host-INSERT color-primary"></span></b>
+            is requesting permission to<br />
+            <br />
+            <b class="color-primary">encrypt a text</b> (NIP04) <br />
+            <br />
+            <span>
+              for the selected identity
+              <span
+                style="font-weight: 500"
+                class="nick-INSERT color-primary"
+              ></span>
+            </span>
+          </span>
+        </div>
+
+        <!-- Card2 for nip04.encrypt -->
+        <div id="card2Nip04Encrypt" class="card sam-mt sam-ml sam-mr">
+          <div id="card2Nip04Encrypt_text" class="text"></div>
+        </div>
+
+        <!-- Card for nip04.decrypt -->
+        <div id="cardNip04Decrypt" class="card sam-mt sam-ml sam-mr">
+          <span style="text-align: center">
+            <b><span class="host-INSERT color-primary"></span></b>
+            is requesting permission to<br />
+            <br />
+            <b class="color-primary">decrypt a text</b> (NIP04) <br />
+            <br />
+            <span>
+              for the selected identity
+              <span
+                style="font-weight: 500"
+                class="nick-INSERT color-primary"
+              ></span>
+            </span>
+          </span>
+        </div>
+
+        <!-- Card2 for nip04.decrypt -->
+        <div id="card2Nip04Decrypt" class="card sam-mt sam-ml sam-mr">
+          <div id="card2Nip04Decrypt_text" class="text"></div>
+        </div>
+      </div>
+
+      <!------------->
+      <!-- ACTIONS -->
+      <!------------->
+      <div class="sam-footer-grid-2">
+        <div class="btn-group">
+          <button id="rejectButton" type="button" class="btn btn-secondary">
+            Reject
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary dropdown-toggle dropdown-toggle-split"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <span class="visually-hidden">Toggle Dropdown</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <button id="rejectJustOnceButton" class="dropdown-item">
+                just once
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="btn-group">
+          <button id="approveButton" type="button" class="btn btn-primary">
+            Approve
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <span class="visually-hidden">Toggle Dropdown</span>
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <button id="approveJustOnceButton" class="dropdown-item" href="#">
+                just once
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <script src="prompt.js"></script>
+  </body>
+</html>
