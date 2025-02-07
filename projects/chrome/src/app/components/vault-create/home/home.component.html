@@ -6,7 +6,7 @@
   <div class="sam-flex-column center">
     <div class="sam-flex-column gap" style="align-items: center">
       <div class="logo-frame">
-        <img src="gooti.svg" height="120" width="120" alt=""/>
+        <img src="gooti.svg" height="120" width="120" alt="" />
       </div>
 
       <button
@@ -25,18 +25,10 @@
       <button
         type="button"
         class="btn btn-secondary"
-        (click)="fileInput.click()"
+        (click)="router.navigateByUrl('/vault-import')"
       >
         <span>Import a vault</span>
       </button>
     </div>
   </div>
 </div>
-
-<input
-  #fileInput
-  class="file-input"
-  type="file"
-  (change)="onImportFileChange($event)"
-  accept=".json"
-/>

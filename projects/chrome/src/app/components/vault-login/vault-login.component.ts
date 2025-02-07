@@ -43,9 +43,9 @@ export class VaultLoginComponent {
     }
   }
 
-  async onClickDeleteVault() {
+  async onClickResetExtension() {
     try {
-      await this.#storage.deleteVault();
+      await this.#storage.resetExtension();
       this.#startup.startOver(getNewStorageServiceConfig());
     } catch (error) {
       console.log(error);

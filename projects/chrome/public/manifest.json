@@ -2,8 +2,9 @@
   "manifest_version": 3,
   "name": "Gooti",
   "description": "Nostr Identity Manager & Signer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "homepage_url": "https://getgooti.com",
+  "options_page": "options.html",
   "permissions": [
     "windows",
     "storage"

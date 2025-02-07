@@ -115,6 +115,14 @@ export class StorageService {
     await deleteVault.call(this, doNotSetIsInitializedToFalse);
   }
 
+  async resetExtension() {
+    this.assureIsInitialized();
+    await this.getBrowserSyncHandler().clearData();
+    await this.getBrowserSessionHandler().clearData();
+    await this.getGootiMetaHandler().clearData([]);
+    this.isInitialized = false;
+  }
+
   async unlockVault(password: string): Promise<void> {
     await unlockVault.call(this, password);
   }

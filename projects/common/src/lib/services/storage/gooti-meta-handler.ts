@@ -8,7 +8,7 @@ export abstract class GootiMetaHandler {
 
   #gootiMetaData?: GootiMetaData;
 
-  readonly metaProperties = ['syncFlow'];
+  readonly metaProperties = ['syncFlow', 'vaultSnapshots'];
   /**
    * Load the full data from the storage. If the storage is used for storing
    * other data (e.g. browser sync data when the user decided to NOT sync),
@@ -39,5 +39,5 @@ export abstract class GootiMetaHandler {
     await this.saveFullData(this.#gootiMetaData);
   }
 
-  abstract clearData(): Promise<void>;
+  abstract clearData(keep: string[]): Promise<void>;
 }

@@ -5,7 +5,7 @@
 <div class="content-login-vault">
   <div class="sam-flex-column gap" style="align-items: center">
     <div class="logo-frame">
-      <img src="gooti.svg" height="120" width="120" alt=""/>
+      <img src="gooti.svg" height="120" width="120" alt="" />
     </div>
 
     <div class="sam-mt-2 input-group">
@@ -45,14 +45,14 @@
       class="sam-mt"
       (click)="
         confirm.show(
-          'Do you really want to delete your vault? All existing data will be lost.',
-          onClickDeleteVault.bind(this)
+          'Do you really want to reset the extension? All data will be lost.',
+          onClickResetExtension.bind(this)
         )
       "
       type="button"
       class="btn btn-link"
     >
-      Delete Vault
+      Reset Extension
     </button>
   </div>
 </div>
