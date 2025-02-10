@@ -22,7 +22,8 @@ async window.nostr.nip04.decrypt(pubkey, ciphertext): string
 The repository is configured as monorepo to hold the extensions for Chrome and Firefox. 
 
 [Get the Firefox extension here!](https://addons.mozilla.org/en-US/firefox/addon/gooti/)
-Chrome extension (is review by Google)
+
+Chrome extension (currently reviewed by Google)
 
 ## Develop Chrome Extension
 
