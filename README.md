@@ -23,7 +23,7 @@ The repository is configured as monorepo to hold the extensions for Chrome and F
 
 [Get the Firefox extension here!](https://addons.mozilla.org/en-US/firefox/addon/gooti/)
 
-Chrome extension (currently reviewed by Google)
+[Get the Chrome extension here!](https://chromewebstore.google.com/detail/gooti/cpcnmacmpalecmijkbcajanpdlcgjpgj)
 
 ## Develop Chrome Extension
 
