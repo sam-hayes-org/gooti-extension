@@ -24,7 +24,15 @@ switch (method) {
     title = 'Encrypt';
     break;
 
+  case 'nip44.encrypt':
+    title = 'Encrypt';
+    break;
+
   case 'nip04.decrypt':
+    title = 'Decrypt';
+    break;
+
+  case 'nip44.decrypt':
     title = 'Decrypt';
     break;
 
@@ -110,6 +118,23 @@ if (cardNip04EncryptElement && card2Nip04EncryptElement) {
   }
 }
 
+const cardNip44EncryptElement = document.getElementById('cardNip44Encrypt');
+const card2Nip44EncryptElement = document.getElementById('card2Nip44Encrypt');
+if (cardNip44EncryptElement && card2Nip44EncryptElement) {
+  if (method === 'nip44.encrypt') {
+    const card2Nip44Encrypt_textElement = document.getElementById(
+      'card2Nip44Encrypt_text'
+    );
+    if (card2Nip44Encrypt_textElement) {
+      const eventObject: { peerPubkey: string; plaintext: string } =
+        JSON.parse(event);
+      card2Nip44Encrypt_textElement.innerText = eventObject.plaintext;
+    }
+  } else {
+    cardNip44EncryptElement.style.display = 'none';
+    card2Nip44EncryptElement.style.display = 'none';
+  }
+}
 const cardNip04DecryptElement = document.getElementById('cardNip04Decrypt');
 const card2Nip04DecryptElement = document.getElementById('card2Nip04Decrypt');
 if (cardNip04DecryptElement && card2Nip04DecryptElement) {
@@ -125,6 +150,24 @@ if (cardNip04DecryptElement && card2Nip04DecryptElement) {
   } else {
     cardNip04DecryptElement.style.display = 'none';
     card2Nip04DecryptElement.style.display = 'none';
+  }
+}
+
+const cardNip44DecryptElement = document.getElementById('cardNip44Decrypt');
+const card2Nip44DecryptElement = document.getElementById('card2Nip44Decrypt');
+if (cardNip44DecryptElement && card2Nip44DecryptElement) {
+  if (method === 'nip44.decrypt') {
+    const card2Nip44Decrypt_textElement = document.getElementById(
+      'card2Nip44Decrypt_text'
+    );
+    if (card2Nip44Decrypt_textElement) {
+      const eventObject: { peerPubkey: string; ciphertext: string } =
+        JSON.parse(event);
+      card2Nip44Decrypt_textElement.innerText = eventObject.ciphertext;
+    }
+  } else {
+    cardNip44DecryptElement.style.display = 'none';
+    card2Nip44DecryptElement.style.display = 'none';
   }
 }
 

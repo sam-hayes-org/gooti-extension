@@ -17,6 +17,8 @@ It also implements these optional methods:
 async window.nostr.getRelays(): { [url: string]: {read: boolean, write: boolean} }
 async window.nostr.nip04.encrypt(pubkey, plaintext): string
 async window.nostr.nip04.decrypt(pubkey, ciphertext): string
+async window.nostr.nip44.encrypt(pubkey, plaintext): string
+async window.nostr.nip44.decrypt(pubkey, ciphertext): string
 ```
 
 The repository is configured as monorepo to hold the extensions for Chrome and Firefox. 
