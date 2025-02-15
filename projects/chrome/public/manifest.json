@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Gooti",
-  "description": "Nostr Identity Manager & Signer",
-  "version": "0.0.3",
+  "name": "Gooti - Nostr Identity Manager & Signer",
+  "description": "Manage and switch between multiple identities while interacting with Nostr apps",
+  "version": "0.0.4",
   "homepage_url": "https://getgooti.com",
   "options_page": "options.html",
   "permissions": [

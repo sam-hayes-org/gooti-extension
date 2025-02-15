@@ -110,15 +110,29 @@ const nostr = {
     },
   },
 
-  //   nip44: {
-  //     async encrypt(peer, plaintext) {
-  //       return window.nostr._call('nip44.encrypt', { peer, plaintext });
-  //     },
+  nip44: {
+    async encrypt(peerPubkey: string, plaintext: string): Promise<string> {
+      debug('nip44.encrypt received');
+      const ciphertext = (await nostr.messenger.request('nip44.encrypt', {
+        peerPubkey,
+        plaintext,
+      })) as string;
+      debug('nip44.encrypt response:');
+      debug(ciphertext);
+      return ciphertext;
+    },
 
-  //     async decrypt(peer, ciphertext) {
-  //       return window.nostr._call('nip44.decrypt', { peer, ciphertext });
-  //     },
-  //   },
+    async decrypt(peerPubkey: string, ciphertext: string): Promise<string> {
+      debug('nip44.decrypt received');
+      const plaintext = (await nostr.messenger.request('nip44.decrypt', {
+        peerPubkey,
+        ciphertext,
+      })) as string;
+      debug('nip44.decrypt response:');
+      debug(plaintext);
+      return plaintext;
+    },
+  },
 };
 
 window.nostr = nostr as any;

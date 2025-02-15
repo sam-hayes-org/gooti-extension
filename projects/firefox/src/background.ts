@@ -8,6 +8,8 @@ import {
   getPosition,
   nip04Decrypt,
   nip04Encrypt,
+  nip44Decrypt,
+  nip44Encrypt,
   PromptResponse,
   PromptResponseMessage,
   signEvent,
@@ -135,8 +137,22 @@ browser.runtime.onMessage.addListener(async (message /*, sender*/) => {
         req.params.plaintext
       );
 
+    case 'nip44.encrypt':
+      return await nip44Encrypt(
+        currentIdentity.privkey,
+        req.params.peerPubkey,
+        req.params.plaintext
+      );
+
     case 'nip04.decrypt':
       return await nip04Decrypt(
+        currentIdentity.privkey,
+        req.params.peerPubkey,
+        req.params.ciphertext
+      );
+
+    case 'nip44.decrypt':
+      return await nip44Decrypt(
         currentIdentity.privkey,
         req.params.peerPubkey,
         req.params.ciphertext

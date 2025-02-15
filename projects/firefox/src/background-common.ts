@@ -12,7 +12,7 @@ import {
   Permission_DECRYPTED,
   Permission_ENCRYPTED,
 } from '@common';
-import { Event, EventTemplate, finalizeEvent, nip04 } from 'nostr-tools';
+import { Event, EventTemplate, finalizeEvent, nip04, nip44 } from 'nostr-tools';
 import { FirefoxMetaHandler } from './app/common/data/firefox-meta-handler';
 import browser from 'webextension-polyfill';
 
@@ -146,7 +146,17 @@ export const checkPermissions = function (
     return permissions.every((x) => x.methodPolicy === 'allow');
   }
 
+  if (method === 'nip44.encrypt') {
+    // No evaluation of params required.
+    return permissions.every((x) => x.methodPolicy === 'allow');
+  }
+
   if (method === 'nip04.decrypt') {
+    // No evaluation of params required.
+    return permissions.every((x) => x.methodPolicy === 'allow');
+  }
+
+  if (method === 'nip44.decrypt') {
     // No evaluation of params required.
     return permissions.every((x) => x.methodPolicy === 'allow');
   }
@@ -243,6 +253,18 @@ export const nip04Encrypt = async function (
   );
 };
 
+export const nip44Encrypt = async function (
+  privkey: string,
+  peerPubkey: string,
+  plaintext: string
+): Promise<string> {
+  const key = nip44.v2.utils.getConversationKey(
+    NostrHelper.hex2bytes(privkey),
+    peerPubkey
+  );
+  return nip44.v2.encrypt(plaintext, key);
+};
+
 export const nip04Decrypt = async function (
   privkey: string,
   peerPubkey: string,
@@ -253,6 +275,19 @@ export const nip04Decrypt = async function (
     peerPubkey,
     ciphertext
   );
+};
+
+export const nip44Decrypt = async function (
+  privkey: string,
+  peerPubkey: string,
+  ciphertext: string
+): Promise<string> {
+  const key = nip44.v2.utils.getConversationKey(
+    NostrHelper.hex2bytes(privkey),
+    peerPubkey
+  );
+
+  return nip44.v2.decrypt(ciphertext, key);
 };
 
 const encryptPermission = async function (
