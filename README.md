@@ -63,6 +63,39 @@ then
 3. click on "Load Temporary Add-on..."
 4. select the `dist/firefox` folder
 
+## Build Extension Packages
+
+To create installable extension packages, first ensure you have built the extensions:
+
+### Chrome Extension Package (.zip)
+
+```bash
+npm run build:chrome
+cd dist/chrome
+zip -r gooti-chrome-extension.zip .
+```
+
+**Install from package:**
+1. Go to `chrome://extensions`
+2. Enable "Developer mode" 
+3. Click "Load unpacked" and select the `dist/chrome` folder, OR
+4. Drag and drop the `.zip` file onto the extensions page
+
+### Firefox Extension Package (.xpi)
+
+```bash
+npm run build:firefox
+cd dist/firefox
+zip -r gooti-firefox-extension.xpi .
+```
+
+**Install from package:**
+1. Go to `about:addons`
+2. Click the gear icon and select "Install Add-on From File..."
+3. Select the `.xpi` file
+
+**Note:** Firefox may require the extension to be signed for permanent installation. For development and testing, use the temporary installation method described above.
+
 ## Testing the Extension
 
 ### Development Mode with Live Reload
