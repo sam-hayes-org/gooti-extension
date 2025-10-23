@@ -5,6 +5,6 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class VisualRelayPipe implements PipeTransform {
   transform(value: string): string {
-    return value.toLowerCase().replaceAll('wss://', '');
+    return value.toLowerCase().replace(/^wss?:\/\//, '').replace(/\/$/, '');
   }
 }

@@ -86,9 +86,23 @@ export class RelaysComponent extends NavComponent implements OnInit {
     }
 
     try {
+      let processedUrl = this.newRelay.url.trim();
+      
+      // If no protocol prefix, assume wss://
+      if (!processedUrl.startsWith('ws://') && !processedUrl.startsWith('wss://')) {
+        processedUrl = 'wss://' + processedUrl;
+        // Update the input field to show the added protocol
+        this.newRelay.url = processedUrl;
+      }
+      
+      // Add trailing slash if not present
+      if (!processedUrl.endsWith('/')) {
+        processedUrl += '/';
+      }
+
       await this.#storage.addRelay({
         identityId: this.identity.id,
-        url: 'wss://' + this.newRelay.url.toLowerCase(),
+        url: processedUrl,
         read: this.newRelay.read,
         write: this.newRelay.write,
       });

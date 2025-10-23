@@ -40,7 +40,7 @@
       type="text"
       (focus)="addRelayInputHasFocus = true"
       (blur)="addRelayInputHasFocus = false"
-      [placeholder]="addRelayInputHasFocus ? 'server.com' : 'Add a relay'"
+      [placeholder]="addRelayInputHasFocus ? 'wss://server.com' : 'Add a relay'"
       class="form-control"
       [(ngModel)]="newRelay.url"
       (ngModelChange)="evaluateCanAdd()"
