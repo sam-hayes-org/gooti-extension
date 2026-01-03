@@ -28,7 +28,7 @@ const openPrompts = new Map<
   }
 >();
 
-browser.runtime.onMessage.addListener(async (message /*, sender*/) => {
+browser.runtime.onMessage.addListener(async (message: any /*, sender*/) => {
   debug('Message received');
   const request = message as BackgroundRequestMessage | PromptResponseMessage;
   debug(request);
