@@ -66,6 +66,13 @@ export enum BrowserSyncFlow {
   CUSTOM_SYNC = 3,
 }
 
+export interface BrowserSyncUtilization {
+  bytesInUse: number;
+  quotaBytes: number;
+  quotaBytesPerItem: number;
+  quotaItems: number;
+}
+
 export interface BrowserSessionData {
   // The following properties purely come from the browser session storage
   // and will never be going into the browser sync storage.

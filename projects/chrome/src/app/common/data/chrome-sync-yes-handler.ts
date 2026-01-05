@@ -5,6 +5,7 @@ import {
   Permission_ENCRYPTED,
   BrowserSyncHandler,
   Relay_ENCRYPTED,
+  BrowserSyncUtilization,
 } from '@common';
 
 /**
@@ -51,5 +52,15 @@ export class ChromeSyncYesHandler extends BrowserSyncHandler {
 
   async clearData(): Promise<void> {
     await chrome.storage.sync.clear();
+  }
+
+  override async getUtilization(): Promise<BrowserSyncUtilization> {
+    const bytesInUse = await chrome.storage.sync.getBytesInUse(null);
+    return {
+      bytesInUse,
+      quotaBytes: chrome.storage.sync.QUOTA_BYTES,
+      quotaBytesPerItem: chrome.storage.sync.QUOTA_BYTES_PER_ITEM,
+      quotaItems: chrome.storage.sync.MAX_ITEMS,
+    };
   }
 }
