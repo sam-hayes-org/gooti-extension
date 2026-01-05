@@ -1,16 +1,135 @@
+<ng-template
+  #itemUtilizationTemplate
+  let-name="name"
+  let-itemKiloBytesInUse="itemKiloBytesInUse"
+  let-quotaKiloBytesPerItem="quotaKiloBytesPerItem"
+  let-utilization="utilization"
+>
+  <div class="sam-flex-row sam-text-sm" style="justify-content: space-between">
+    <span>{{ name }}</span>
+    <span>
+      <span class="sam-text-muted">Using</span>
+      {{ itemKiloBytesInUse | number: "1.0-1" }}
+      KB
+      <span class="sam-text-muted"> of </span>
+      {{ quotaKiloBytesPerItem | number: "1.0-1" }} KB
+    </span>
+  </div>
+
+  <div class="progress sam-mb-h">
+    <div
+      class="progress-bar"
+      [class.bg-warning]="utilization > 60 && utilization <= 90"
+      [class.bg-danger]="utilization > 90"
+      role="progressbar"
+      [style]="'width: ' + utilization + '%'"
+    >
+      @if (utilization > 8) {
+        {{ utilization | number: "1.0-0" }}%
+      }
+    </div>
+  </div>
+</ng-template>
+
 <div class="sam-text-header">
   <span> Settings </span>
 </div>
 
-<span>SYNC: {{ syncFlow }}</span>
+<div class="sam-flex-column gap-h">
+  <span>VAULT</span>
 
-<button class="btn btn-primary" (click)="onClickExportVault()">
-  Export Vault
-</button>
+  <button class="btn btn-primary" (click)="onClickExportVault()">Export</button>
 
-<button class="btn btn-primary" (click)="navigate('/vault-import')">
-  Import Vault
-</button>
+  <button class="btn btn-primary" (click)="navigate('/vault-import')">
+    Import
+  </button>
+</div>
+
+<div class="sam-flex-column">
+  <span>SYNC ({{ syncFlow }})</span>
+
+  @if (syncUtilization) {
+    <div class="sam-flex-column">
+      <span class="sam-text-sm" style="align-self: flex-end">
+        <span class="sam-text-muted">Using</span>
+        {{ syncUtilization.kiloBytesInUse | number: "1.0-0" }} KB
+        <span class="sam-text-muted"> of </span>
+        {{ syncUtilization.quotaKiloBytes | number: "1.0-0" }} KB
+      </span>
+      <div class="progress sam-mb-h">
+        <div
+          class="progress-bar"
+          [class.bg-warning]="
+            syncUtilization.utilizationBytes > 60 &&
+            syncUtilization.utilizationBytes <= 90
+          "
+          [class.bg-danger]="syncUtilization.utilizationBytes > 90"
+          role="progressbar"
+          [style]="'width: ' + syncUtilization.utilizationBytes + '%'"
+        >
+          @if (syncUtilization.utilizationBytes > 8) {
+            {{ syncUtilization.utilizationBytes | number: "1.0-0" }}%
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="sam-flex-column">
+      <span class="sam-text-sm" style="align-self: flex-end">
+        <span class="sam-text-muted">Using</span>
+        {{ syncUtilization.itemsInUse | number: "1.0-0" }} items
+        <span class="sam-text-muted"> of </span>
+        {{ syncUtilization.quotaItems | number: "1.0-0" }}
+      </span>
+      <div class="progress sam-mb-h">
+        <div
+          class="progress-bar"
+          [class.bg-warning]="
+            syncUtilization.utilizationItems > 60 &&
+            syncUtilization.utilizationItems <= 90
+          "
+          [class.bg-danger]="syncUtilization.utilizationItems > 90"
+          role="progressbar"
+          [style]="'width: ' + syncUtilization.utilizationItems + '%'"
+        >
+          @if (syncUtilization.utilizationItems > 8) {
+            {{ syncUtilization.utilizationItems | number: "1.0-0" }}%
+          }
+        </div>
+      </div>
+    </div>
+
+    <ng-container
+      [ngTemplateOutlet]="itemUtilizationTemplate"
+      [ngTemplateOutletContext]="{
+        name: 'Identities',
+        itemKiloBytesInUse: syncUtilization.itemIdentitiesKiloBytesInUse,
+        quotaKiloBytesPerItem: syncUtilization.quotaKiloBytesPerItem,
+        utilization: syncUtilization.utilizationIdentities,
+      }"
+    ></ng-container>
+
+    <ng-container
+      [ngTemplateOutlet]="itemUtilizationTemplate"
+      [ngTemplateOutletContext]="{
+        name: 'Permissions',
+        itemKiloBytesInUse: syncUtilization.itemPermissionsKiloBytesInUse,
+        quotaKiloBytesPerItem: syncUtilization.quotaKiloBytesPerItem,
+        utilization: syncUtilization.utilizationPermissions,
+      }"
+    ></ng-container>
+
+    <ng-container
+      [ngTemplateOutlet]="itemUtilizationTemplate"
+      [ngTemplateOutletContext]="{
+        name: 'Relays',
+        itemKiloBytesInUse: syncUtilization.itemRelaysKiloBytesInUse,
+        quotaKiloBytesPerItem: syncUtilization.quotaKiloBytesPerItem,
+        utilization: syncUtilization.utilizationRelays,
+      }"
+    ></ng-container>
+  }
+</div>
 
 <div class="sam-flex-grow"></div>
 

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   BrowserSyncData,
+  BrowserSyncUtilization,
   Identity_ENCRYPTED,
   Permission_ENCRYPTED,
   Relay_ENCRYPTED,
@@ -108,4 +109,6 @@ export abstract class BrowserSyncHandler {
    * Clear all data from the sync data storage.
    */
   abstract clearData(): Promise<void>;
+
+  getUtilization?(): Promise<BrowserSyncUtilization>;
 }

@@ -5,6 +5,7 @@ import {
   Permission_ENCRYPTED,
   BrowserSyncHandler,
   Relay_ENCRYPTED,
+  BrowserSyncUtilization,
 } from '@common';
 import browser from 'webextension-polyfill';
 
@@ -52,5 +53,15 @@ export class FirefoxSyncYesHandler extends BrowserSyncHandler {
 
   async clearData(): Promise<void> {
     await browser.storage.sync.clear();
+  }
+
+  override async getUtilization(): Promise<BrowserSyncUtilization> {
+    const bytesInUse = await browser.storage.sync.getBytesInUse(null);
+    return {
+      bytesInUse,
+      quotaBytes: 102400, // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/storage/sync
+      quotaBytesPerItem: 8192, // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/storage/sync
+      quotaItems: 512, // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/storage/sync
+    };
   }
 }
