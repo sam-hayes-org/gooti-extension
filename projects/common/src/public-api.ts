@@ -4,6 +4,7 @@
 
 // Common
 export * from './lib/common/nav-component';
+export * from './lib/common/sleep';
 
 // Helpers
 export * from './lib/helpers/crypto-helper';
