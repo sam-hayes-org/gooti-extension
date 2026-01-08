@@ -16,7 +16,7 @@ interface NewRelay {
   url: string;
   read: boolean;
   write: boolean;
-};
+}
 
 @Component({
   selector: 'app-relays',
@@ -86,12 +86,14 @@ export class RelaysComponent extends NavComponent implements OnInit {
     }
 
     try {
-      await this.#storage.addRelay({
+      const relay = {
         identityId: this.identity.id,
-        url: 'wss://' + this.newRelay.url.toLowerCase(),
+        url: this.#improveRelayUrl(this.newRelay.url) ?? 'wss://invalid.com',
         read: this.newRelay.read,
         write: this.newRelay.write,
-      });
+      };
+
+      await this.#storage.addRelay(relay);
 
       this.newRelay = {
         url: '',
@@ -127,5 +129,41 @@ export class RelaysComponent extends NavComponent implements OnInit {
         relays.push(JSON.parse(JSON.stringify(x)));
       });
     this.relays = relays;
+  }
+
+  #improveRelayUrl(input: string): string | null {
+    let cleaned = input.trim().toLowerCase();
+
+    // Normalize protocol
+    cleaned = cleaned.replace(/^ws:\/\//i, 'wss://');
+    cleaned = cleaned.replace(/^http:\/\//i, 'wss://');
+    cleaned = cleaned.replace(/^https:\/\//i, 'wss://');
+
+    // Add 'wss://' if no protocol is present
+    if (!/^wss:\/\//i.test(cleaned)) {
+      cleaned = 'wss://' + cleaned;
+    }
+
+    // Remove any trailing slashes if no path is intended, but allow paths
+    // (optional: could normalize further, but keep it simple)
+
+    // Validate with regex
+    const nostrRelayRegex =
+      /^wss:\/\/([a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)(:\d+)?(\/.*)?$/i;
+    if (nostrRelayRegex.test(cleaned)) {
+      return cleaned;
+    }
+
+    // If still invalid, try to parse and fix hostname/port/path
+    try {
+      const url = new URL(cleaned);
+      if (url.protocol !== 'wss:') {
+        return null; // Shouldn't happen after normalization
+      }
+      return url.toString();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      return null; // Unable to improve
+    }
   }
 }

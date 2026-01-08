@@ -2,6 +2,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- Auto fix simple mistakes when adding a new relay.  
+
 ### Added
 
 - This CHANGELOG file.
