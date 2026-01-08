@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Upgrade from Angular 19 to Angular 21.
+- The vault password to unlock the vault can be applied with pressing ENTER. 
 
 
 ## [chrome-0.0.4] - 2025-02-15

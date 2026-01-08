@@ -15,6 +15,7 @@
         class="form-control"
         placeholder="vault password"
         [(ngModel)]="loginPassword"
+        (keydown.enter)="loginVault(passwordInputElement.value)"
       />
       <button
         class="btn btn-outline-secondary"
@@ -60,13 +61,13 @@
 <!----------->
 <!-- ALERT -->
 <!----------->
-@if(showInvalidPasswordAlert) {
-<div style="position: absolute; bottom: 0; align-self: center">
-  <div class="alert alert-danger sam-flex-row gap" role="alert">
-    <i class="bi bi-exclamation-triangle"></i>
-    <span>Invalid password</span>
+@if (showInvalidPasswordAlert) {
+  <div style="position: absolute; bottom: 0; align-self: center">
+    <div class="alert alert-danger sam-flex-row gap" role="alert">
+      <i class="bi bi-exclamation-triangle"></i>
+      <span>Invalid password</span>
+    </div>
   </div>
-</div>
 }
 
 <lib-confirm #confirm> </lib-confirm>

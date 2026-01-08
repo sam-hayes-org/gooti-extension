@@ -26,17 +26,17 @@ export class VaultLoginComponent {
     }
   }
 
-  async loginVault() {
-    if (!this.loginPassword) {
+  async loginVault(password: string | undefined = undefined) {
+    if (!this.loginPassword && !password) {
       return;
     }
 
     try {
-      await this.#storage.unlockVault(this.loginPassword);
+      await this.#storage.unlockVault(password ?? this.loginPassword);
       this.#router.navigateByUrl('/home/identities');
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       this.showInvalidPasswordAlert = true;
-      console.log(error);
       window.setTimeout(() => {
         this.showInvalidPasswordAlert = false;
       }, 2000);
