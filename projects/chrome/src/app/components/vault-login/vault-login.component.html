@@ -15,6 +15,7 @@
         class="form-control"
         placeholder="vault password"
         [(ngModel)]="loginPassword"
+        (keydown.enter)="loginVault(passwordInputElement.value)"
       />
       <button
         class="btn btn-outline-secondary"
