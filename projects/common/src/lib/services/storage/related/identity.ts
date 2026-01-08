@@ -6,17 +6,56 @@ import {
   StorageService,
 } from '@common';
 
+export const editNick = async function (
+  this: StorageService,
+  identityId: string,
+  newNick: string,
+) {
+  this.assureIsInitialized();
+
+  const browserSessionData = this.getBrowserSessionHandler().browserSessionData;
+  const browserSyncData = this.getBrowserSyncHandler().browserSyncData;
+  if (!browserSessionData || !browserSyncData) {
+    throw new Error('Browser session or sync data is undefined.');
+  }
+
+  const browserSessionDataIdentity = browserSessionData.identities.find(
+    (x) => x.id === identityId,
+  );
+  if (!browserSessionDataIdentity) {
+    throw new Error('Identity not found in browser session data.');
+  }
+  browserSessionDataIdentity.nick = newNick;
+  this.getBrowserSessionHandler().saveFullData(browserSessionData);
+
+  const encryptedIdentity = await encryptIdentity.call(
+    this,
+    browserSessionDataIdentity,
+  );
+  // Find the encrypted identity in sync data, update and store it.
+  const browserSyncDataIdentity = browserSyncData.identities.find(
+    (x) => x.id === encryptedIdentity.id,
+  );
+  if (!browserSyncDataIdentity) {
+    throw new Error('Identity not found in browser sync data.');
+  }
+  browserSyncDataIdentity.nick = encryptedIdentity.nick;
+  await this.getBrowserSyncHandler().saveAndSetPartialData_Identities({
+    identities: browserSyncData.identities,
+  });
+};
+
 export const addIdentity = async function (
   this: StorageService,
   data: {
     nick: string;
     privkeyString: string;
-  }
+  },
 ): Promise<void> {
   this.assureIsInitialized();
 
   const privkey = NostrHelper.getNostrPrivkeyObject(
-    data.privkeyString.toLowerCase()
+    data.privkeyString.toLowerCase(),
   ).hex;
 
   // Check if an identity with the same privkey already exists.
@@ -25,7 +64,7 @@ export const addIdentity = async function (
   ).find((x) => x.privkey === privkey);
   if (existingIdentity) {
     throw new Error(
-      `An identity with the same private key already exists: ${existingIdentity.nick}`
+      `An identity with the same private key already exists: ${existingIdentity.nick}`,
     );
   }
 
@@ -65,14 +104,14 @@ export const addIdentity = async function (
     await this.getBrowserSyncHandler().saveAndSetPartialData_SelectedIdentityId(
       {
         selectedIdentityId: encryptedIdentity.id,
-      }
+      },
     );
   }
 };
 
 export const deleteIdentity = async function (
   this: StorageService,
-  identityId: string | undefined
+  identityId: string | undefined,
 ): Promise<void> {
   this.assureIsInitialized();
 
@@ -87,13 +126,13 @@ export const deleteIdentity = async function (
   }
 
   browserSessionData.identities = browserSessionData.identities.filter(
-    (x) => x.id !== identityId
+    (x) => x.id !== identityId,
   );
   browserSessionData.permissions = browserSessionData.permissions.filter(
-    (x) => x.identityId !== identityId
+    (x) => x.identityId !== identityId,
   );
   browserSessionData.relays = browserSessionData.relays.filter(
-    (x) => x.identityId !== identityId
+    (x) => x.identityId !== identityId,
   );
   if (browserSessionData.selectedIdentityId === identityId) {
     // Choose another identity to be selected or null if there is none.
@@ -108,17 +147,17 @@ export const deleteIdentity = async function (
   const encryptedIdentityId = await this.encrypt(identityId);
   await this.getBrowserSyncHandler().saveAndSetPartialData_Identities({
     identities: browserSyncData.identities.filter(
-      (x) => x.id !== encryptedIdentityId
+      (x) => x.id !== encryptedIdentityId,
     ),
   });
   await this.getBrowserSyncHandler().saveAndSetPartialData_Permissions({
     permissions: browserSyncData.permissions.filter(
-      (x) => x.identityId !== encryptedIdentityId
+      (x) => x.identityId !== encryptedIdentityId,
     ),
   });
   await this.getBrowserSyncHandler().saveAndSetPartialData_Relays({
     relays: browserSyncData.relays.filter(
-      (x) => x.identityId !== encryptedIdentityId
+      (x) => x.identityId !== encryptedIdentityId,
     ),
   });
   await this.getBrowserSyncHandler().saveAndSetPartialData_SelectedIdentityId({
@@ -131,7 +170,7 @@ export const deleteIdentity = async function (
 
 export const switchIdentity = async function (
   this: StorageService,
-  identityId: string | null
+  identityId: string | null,
 ): Promise<void> {
   this.assureIsInitialized();
 
@@ -154,7 +193,7 @@ export const switchIdentity = async function (
 
 export const encryptIdentity = async function (
   this: StorageService,
-  identity: Identity_DECRYPTED
+  identity: Identity_DECRYPTED,
 ): Promise<Identity_ENCRYPTED> {
   const encryptedIdentity: Identity_ENCRYPTED = {
     id: await this.encrypt(identity.id),
@@ -169,7 +208,7 @@ export const encryptIdentity = async function (
 export const decryptIdentities = async function (
   this: StorageService,
   identities: Identity_ENCRYPTED[],
-  withLockedVault: { iv: string; password: string } | undefined = undefined
+  withLockedVault: { iv: string; password: string } | undefined = undefined,
 ): Promise<Identity_DECRYPTED[]> {
   const decryptedIdentities: Identity_DECRYPTED[] = [];
 
@@ -177,7 +216,7 @@ export const decryptIdentities = async function (
     const decryptedIdentity = await decryptIdentity.call(
       this,
       identity,
-      withLockedVault
+      withLockedVault,
     );
     decryptedIdentities.push(decryptedIdentity);
   }
@@ -188,7 +227,7 @@ export const decryptIdentities = async function (
 export const decryptIdentity = async function (
   this: StorageService,
   identity: Identity_ENCRYPTED,
-  withLockedVault: { iv: string; password: string } | undefined = undefined
+  withLockedVault: { iv: string; password: string } | undefined = undefined,
 ): Promise<Identity_DECRYPTED> {
   if (typeof withLockedVault === 'undefined') {
     const decryptedIdentity: Identity_DECRYPTED = {
@@ -206,25 +245,25 @@ export const decryptIdentity = async function (
       identity.id,
       'string',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
     ),
     nick: await this.decryptWithLockedVault(
       identity.nick,
       'string',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
     ),
     createdAt: await this.decryptWithLockedVault(
       identity.createdAt,
       'string',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
     ),
     privkey: await this.decryptWithLockedVault(
       identity.privkey,
       'string',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
     ),
   };
 

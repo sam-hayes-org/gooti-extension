@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - This CHANGELOG file.
-- Show utilization info in the settings view when SYNC is turned on. 
+- Show utilization info in the settings view when SYNC is turned on.
+- Allow editing the nick name on any identity.
 
 ### Changed
 

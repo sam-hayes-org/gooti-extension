@@ -3,9 +3,42 @@
     class="button"
     icon="chevron-left"
     (click)="onClickCancel()"
+    title="Back"
   ></lib-icon-button>
 
-  <span class="text">{{ identity?.nick }} </span>
+  @if (!isEditingNick) {
+    <div class="nick-read">
+      <span class="text">{{ identity?.nick }} </span>
+      <lib-icon-button
+        class="sam-ml-h"
+        icon="pencil"
+        (click)="onClickEditNick()"
+        title="Edit Nick"
+      ></lib-icon-button>
+    </div>
+  } @else {
+    <div class="nick-write input-group">
+      <input
+        #nickInput
+        id="nick-edit-input"
+        type="text"
+        placeholder="Nick"
+        class="form-control form-control-sm"
+        style="font-size: 1rem"
+        [ngModel]="identity?.nick"
+        (keydown.enter)="onNickEnter(nickInput)"
+        autocomplete="off"
+      />
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+        title="Cancel"
+        (click)="isEditingNick = false"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  }
 </div>
 
 <div class="edit-identity-outlet">
