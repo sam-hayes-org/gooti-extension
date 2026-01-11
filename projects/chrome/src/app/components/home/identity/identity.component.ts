@@ -65,9 +65,7 @@ export class IdentityComponent implements OnInit {
 
       const identity = this.#storage
         .getBrowserSessionHandler()
-        .browserSessionData?.identities.find(
-          (x) => x.id === selectedIdentityId
-        );
+        .browserSessionData?.[`identity_${selectedIdentityId}`];
 
       if (!identity) {
         return;

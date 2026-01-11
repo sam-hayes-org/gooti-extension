@@ -102,7 +102,7 @@
     <ng-container
       [ngTemplateOutlet]="itemUtilizationTemplate"
       [ngTemplateOutletContext]="{
-        name: 'Identities',
+        name: 'Array Identities',
         itemKiloBytesInUse: syncUtilization.itemIdentitiesKiloBytesInUse,
         quotaKiloBytesPerItem: syncUtilization.quotaKiloBytesPerItem,
         utilization: syncUtilization.utilizationIdentities,
@@ -112,7 +112,7 @@
     <ng-container
       [ngTemplateOutlet]="itemUtilizationTemplate"
       [ngTemplateOutletContext]="{
-        name: 'Permissions',
+        name: 'Array Permissions',
         itemKiloBytesInUse: syncUtilization.itemPermissionsKiloBytesInUse,
         quotaKiloBytesPerItem: syncUtilization.quotaKiloBytesPerItem,
         utilization: syncUtilization.utilizationPermissions,
@@ -122,7 +122,7 @@
     <ng-container
       [ngTemplateOutlet]="itemUtilizationTemplate"
       [ngTemplateOutletContext]="{
-        name: 'Relays',
+        name: 'Array Relays',
         itemKiloBytesInUse: syncUtilization.itemRelaysKiloBytesInUse,
         quotaKiloBytesPerItem: syncUtilization.quotaKiloBytesPerItem,
         utilization: syncUtilization.utilizationRelays,

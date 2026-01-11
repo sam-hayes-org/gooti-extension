@@ -19,9 +19,8 @@ export const editNick = async function (
     throw new Error('Browser session or sync data is undefined.');
   }
 
-  const browserSessionDataIdentity = browserSessionData.identities.find(
-    (x) => x.id === identityId,
-  );
+  const browserSessionDataIdentity =
+    browserSessionData[`identity_${identityId}`];
   if (!browserSessionDataIdentity) {
     throw new Error('Identity not found in browser session data.');
   }
@@ -33,9 +32,8 @@ export const editNick = async function (
     browserSessionDataIdentity,
   );
   // Find the encrypted identity in sync data, update and store it.
-  const browserSyncDataIdentity = browserSyncData.identities.find(
-    (x) => x.id === encryptedIdentity.id,
-  );
+  const browserSyncDataIdentity =
+    browserSyncData[`identity_${encryptedIdentity.id}`];
   if (!browserSyncDataIdentity) {
     throw new Error('Identity not found in browser sync data.');
   }
@@ -59,14 +57,20 @@ export const addIdentity = async function (
   ).hex;
 
   // Check if an identity with the same privkey already exists.
-  const existingIdentity = (
-    this.getBrowserSessionHandler().browserSessionData?.identities ?? []
-  ).find((x) => x.privkey === privkey);
-  if (existingIdentity) {
-    throw new Error(
-      `An identity with the same private key already exists: ${existingIdentity.nick}`,
-    );
-  }
+  // Get all identityIds
+  const identityIds =
+    this.getBrowserSessionHandler().browserSessionData?.identities ?? [];
+  identityIds.forEach((identityId) => {
+    const identity =
+      this.getBrowserSessionHandler().browserSessionData?.[
+        `identity_${identityId}`
+      ];
+    if (identity?.privkey === privkey) {
+      throw new Error(
+        `An identity with the same private key already exists: ${identity.nick}`,
+      );
+    }
+  });
 
   const browserSessionData = this.getBrowserSessionHandler().browserSessionData;
   if (!browserSessionData) {
@@ -81,23 +85,27 @@ export const addIdentity = async function (
   };
 
   // Add the new identity to the session data.
-  browserSessionData.identities.push(decryptedIdentity);
+  browserSessionData.identities.push(decryptedIdentity.id);
   let isFirstIdentity = false;
   if (browserSessionData.identities.length === 1) {
     isFirstIdentity = true;
     browserSessionData.selectedIdentityId = decryptedIdentity.id;
   }
+  browserSessionData[`identity_${decryptedIdentity.id}`] = decryptedIdentity;
   this.getBrowserSessionHandler().saveFullData(browserSessionData);
 
   // Encrypt the new identity and add it to the sync data.
   const encryptedIdentity = await encryptIdentity.call(this, decryptedIdentity);
   const encryptedIdentities = [
     ...(this.getBrowserSyncHandler().browserSyncData?.identities ?? []),
-    encryptedIdentity,
+    encryptedIdentity.id,
   ];
 
   await this.getBrowserSyncHandler().saveAndSetPartialData_Identities({
     identities: encryptedIdentities,
+  });
+  await this.getBrowserSyncHandler().saveAndSetPartialData_Identity({
+    identity: encryptedIdentity,
   });
 
   if (isFirstIdentity) {
@@ -126,11 +134,25 @@ export const deleteIdentity = async function (
   }
 
   browserSessionData.identities = browserSessionData.identities.filter(
-    (x) => x.id !== identityId,
+    (x) => x !== identityId,
   );
+
+  // Find permissions to delete.
+  const toBeDeletedPermissionIds: string[] = [];
+  browserSessionData.permissions.forEach((permissionId) => {
+    const permission = browserSessionData[`permission_${permissionId}`];
+    if (permission?.identityId === identityId) {
+      toBeDeletedPermissionIds.push(permissionId);
+    }
+  });
+
   browserSessionData.permissions = browserSessionData.permissions.filter(
-    (x) => x.identityId !== identityId,
+    (x) => !toBeDeletedPermissionIds.includes(x),
   );
+  toBeDeletedPermissionIds.forEach((permissionId) => {
+    delete browserSessionData[`permission_${permissionId}`];
+  });
+
   browserSessionData.relays = browserSessionData.relays.filter(
     (x) => x.identityId !== identityId,
   );
@@ -138,28 +160,54 @@ export const deleteIdentity = async function (
     // Choose another identity to be selected or null if there is none.
     browserSessionData.selectedIdentityId =
       browserSessionData.identities.length > 0
-        ? browserSessionData.identities[0].id
+        ? browserSessionData.identities[0]
         : null;
   }
   await this.getBrowserSessionHandler().saveFullData(browserSessionData);
 
-  // Handle Sync data.
+  // UPDATE Sync Data.
+
+  // Handle the identity
   const encryptedIdentityId = await this.encrypt(identityId);
   await this.getBrowserSyncHandler().saveAndSetPartialData_Identities({
     identities: browserSyncData.identities.filter(
-      (x) => x.id !== encryptedIdentityId,
+      (x) => x !== encryptedIdentityId,
     ),
+  });
+  await this.getBrowserSyncHandler().deleteSaveAndUnsetPartialData_Identity({
+    identityId: encryptedIdentityId,
+  });
+
+  // Handle the permissions
+  const toBeDeletedEncryptedPermissionIds: string[] = [];
+  browserSyncData.permissions.forEach((encryptedPermissionId) => {
+    const encryptedPermission =
+      browserSyncData[`permission_${encryptedPermissionId}`];
+    if (encryptedPermission?.identityId === encryptedIdentityId) {
+      toBeDeletedEncryptedPermissionIds.push(encryptedPermissionId);
+    }
   });
   await this.getBrowserSyncHandler().saveAndSetPartialData_Permissions({
     permissions: browserSyncData.permissions.filter(
-      (x) => x.identityId !== encryptedIdentityId,
+      (x) => !toBeDeletedEncryptedPermissionIds.includes(x),
     ),
   });
+  for (const encryptedPermissionId of toBeDeletedEncryptedPermissionIds) {
+    await this.getBrowserSyncHandler().deleteSaveAndUnsetPartialData_Permission(
+      {
+        permissionId: encryptedPermissionId,
+      },
+    );
+  }
+
+  // Handle the relays
   await this.getBrowserSyncHandler().saveAndSetPartialData_Relays({
     relays: browserSyncData.relays.filter(
       (x) => x.identityId !== encryptedIdentityId,
     ),
   });
+
+  // Handle the selected identity id
   await this.getBrowserSyncHandler().saveAndSetPartialData_SelectedIdentityId({
     selectedIdentityId:
       browserSessionData.selectedIdentityId === null
@@ -177,7 +225,7 @@ export const switchIdentity = async function (
   // Check, if the identity really exists.
   const browserSessionData = this.getBrowserSessionHandler().browserSessionData;
 
-  if (!browserSessionData?.identities.find((x) => x.id === identityId)) {
+  if (!browserSessionData?.identities.find((x) => x === identityId)) {
     return;
   }
 
