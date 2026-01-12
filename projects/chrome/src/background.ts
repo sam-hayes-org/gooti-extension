@@ -57,7 +57,6 @@ browser.runtime.onMessage.addListener(async (message: any /*, sender*/) => {
   const currentIdentity = browserSessionData[
     `identity_${browserSessionData.selectedIdentityId}`
   ] as Identity_DECRYPTED | undefined;
-  //   browserSessionData
 
   if (!currentIdentity) {
     throw new Error('No Nostr identity available at endpoint.');

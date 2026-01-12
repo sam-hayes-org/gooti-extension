@@ -53,7 +53,7 @@ export class IdentityComponent implements OnInit {
     }
 
     this.#router.navigateByUrl(
-      `/edit-identity/${this.selectedIdentity.id}/home`
+      `/edit-identity/${this.selectedIdentity.id}/home`,
     );
   }
 
@@ -63,9 +63,10 @@ export class IdentityComponent implements OnInit {
         this.#storage.getBrowserSessionHandler().browserSessionData
           ?.selectedIdentityId ?? null;
 
-      const identity = this.#storage
-        .getBrowserSessionHandler()
-        .browserSessionData?.[`identity_${selectedIdentityId}`];
+      const identity =
+        this.#storage.getBrowserSessionHandler().browserSessionData?.[
+          `identity_${selectedIdentityId}`
+        ];
 
       if (!identity) {
         return;
@@ -80,7 +81,7 @@ export class IdentityComponent implements OnInit {
         this.#storage
           .getBrowserSessionHandler()
           .browserSessionData?.relays.filter(
-            (x) => x.identityId === identity.id
+            (x) => x.identityId === identity.id,
           ) ?? [];
       if (relays.length === 0) {
         return;
