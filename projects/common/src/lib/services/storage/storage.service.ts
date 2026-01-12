@@ -33,15 +33,13 @@ export interface StorageServiceConfig {
   providedIn: 'root',
 })
 export class StorageService {
-  readonly latestVersion = 1;
+  readonly latestVersion = 2;
   isInitialized = false;
 
   #browserSessionHandler!: BrowserSessionHandler;
   #browserSyncYesHandler!: BrowserSyncHandler;
   #browserSyncNoHandler!: BrowserSyncHandler;
   #gootiMetaHandler!: GootiMetaHandler;
-
-  readonly #version = 2;
 
   initialize(config: StorageServiceConfig): void {
     if (this.isInitialized) {
@@ -311,10 +309,10 @@ export class StorageService {
     let workingData: any = browserSyncData;
     let migrationWasPerformed = false;
     const allegedVersion = browserSyncData['version'] as number;
-    if (allegedVersion < this.#version) {
+    if (allegedVersion < this.latestVersion) {
       // Migration required.
 
-      for (let v = allegedVersion + 1; v <= this.#version; v++) {
+      for (let v = allegedVersion + 1; v <= this.latestVersion; v++) {
         switch (v) {
           case 2:
             // Migration to version 2
