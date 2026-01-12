@@ -42,9 +42,10 @@ export class PermissionsComponent extends NavComponent implements OnInit {
   }
 
   #initialize(identityId: string) {
-    this.identity = this.#storage
-      .getBrowserSessionHandler()
-      .browserSessionData?.identities.find((x) => x.id === identityId);
+    this.identity =
+      this.#storage.getBrowserSessionHandler().browserSessionData?.[
+        `identity_${identityId}`
+      ];
 
     if (!this.identity) {
       return;
@@ -59,16 +60,29 @@ export class PermissionsComponent extends NavComponent implements OnInit {
     }
 
     this.hostsPermissions = [];
+    const permissions: Permission_DECRYPTED[] = [];
 
-    const hostPermissions = (
+    const permissionIds =
       this.#storage.getBrowserSessionHandler().browserSessionData
-        ?.permissions ?? []
-    )
-      .filter((x) => x.identityId === identityId)
+        ?.permissions ?? [];
+
+    for (const permissionId of permissionIds) {
+      const permission =
+        this.#storage.getBrowserSessionHandler().browserSessionData?.[
+          `permission_${permissionId}`
+        ];
+
+      if (!permission || permission.identityId !== identityId) {
+        continue;
+      }
+      permissions.push(permission);
+    }
+
+    const hostPermissions = permissions
       .sortBy((x) => x.host)
       .groupBy(
         (x) => x.host,
-        (y) => y
+        (y) => y,
       );
 
     hostPermissions.forEach((permissions, host) => {

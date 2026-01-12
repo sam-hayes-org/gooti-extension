@@ -118,9 +118,10 @@ export class RelaysComponent extends NavComponent implements OnInit {
   }
 
   #loadData(identityId: string) {
-    this.identity = this.#storage
-      .getBrowserSessionHandler()
-      .browserSessionData?.identities.find((x) => x.id === identityId);
+    this.identity =
+      this.#storage.getBrowserSessionHandler().browserSessionData?.[
+        `identity_${identityId}`
+      ];
 
     const relays: Relay_DECRYPTED[] = [];
     (this.#storage.getBrowserSessionHandler().browserSessionData?.relays ?? [])

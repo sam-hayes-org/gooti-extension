@@ -20,6 +20,7 @@ import {
 import { deletePermission } from './related/permission';
 import { createNewVault, deleteVault, unlockVault } from './related/vault';
 import { addRelay, deleteRelay, updateRelay } from './related/relay';
+import { migrateFromV1ToV2 } from './migrations/migrate-from-v1-to-v2';
 
 export interface StorageServiceConfig {
   browserSessionHandler: BrowserSessionHandler;
@@ -32,7 +33,7 @@ export interface StorageServiceConfig {
   providedIn: 'root',
 })
 export class StorageService {
-  readonly latestVersion = 1;
+  readonly latestVersion = 2;
   isInitialized = false;
 
   #browserSessionHandler!: BrowserSessionHandler;
@@ -304,10 +305,29 @@ export class StorageService {
       };
     }
 
-    // Will be implemented if migration is required.
+    // Determine, if migration is required.
+    let workingData: any = browserSyncData;
+    let migrationWasPerformed = false;
+    const allegedVersion = browserSyncData['version'] as number;
+    if (allegedVersion < this.latestVersion) {
+      // Migration required.
+
+      for (let v = allegedVersion + 1; v <= this.latestVersion; v++) {
+        switch (v) {
+          case 2:
+            // Migration to version 2
+            workingData = migrateFromV1ToV2(workingData);
+            migrationWasPerformed = true;
+            break;
+
+          // TODO: Add future migrations here.
+        }
+      }
+    }
+
     return {
-      browserSyncData: browserSyncData as BrowserSyncData,
-      migrationWasPerformed: false,
+      browserSyncData: workingData as BrowserSyncData,
+      migrationWasPerformed,
     };
   }
 

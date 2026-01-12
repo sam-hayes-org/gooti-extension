@@ -6,7 +6,7 @@ import {
 
 export const deletePermission = async function (
   this: StorageService,
-  permissionId: string
+  permissionId: string,
 ): Promise<void> {
   this.assureIsInitialized();
 
@@ -17,22 +17,27 @@ export const deletePermission = async function (
   }
 
   browserSessionData.permissions = browserSessionData.permissions.filter(
-    (x) => x.id !== permissionId
+    (x) => x !== permissionId,
   );
+  delete browserSessionData[`permission_${permissionId}`];
   await this.getBrowserSessionHandler().saveFullData(browserSessionData);
 
+  // Handle Sync data
   const encryptedPermissionId = await this.encrypt(permissionId);
   await this.getBrowserSyncHandler().saveAndSetPartialData_Permissions({
     permissions: browserSyncData.permissions.filter(
-      (x) => x.id !== encryptedPermissionId
+      (x) => x !== encryptedPermissionId,
     ),
+  });
+  await this.getBrowserSyncHandler().deleteSaveAndUnsetPartialData_Permission({
+    permissionId: encryptedPermissionId,
   });
 };
 
 export const decryptPermission = async function (
   this: StorageService,
   permission: Permission_ENCRYPTED,
-  withLockedVault: { iv: string; password: string } | undefined = undefined
+  withLockedVault: { iv: string; password: string } | undefined = undefined,
 ): Promise<Permission_DECRYPTED> {
   if (typeof withLockedVault === 'undefined') {
     const decryptedPermission: Permission_DECRYPTED = {
@@ -53,31 +58,31 @@ export const decryptPermission = async function (
       permission.id,
       'string',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
     ),
     identityId: await this.decryptWithLockedVault(
       permission.identityId,
       'string',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
     ),
     method: await this.decryptWithLockedVault(
       permission.method,
       'string',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
     ),
     methodPolicy: await this.decryptWithLockedVault(
       permission.methodPolicy,
       'string',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
     ),
     host: await this.decryptWithLockedVault(
       permission.host,
       'string',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
     ),
   };
   if (permission.kind) {
@@ -85,7 +90,7 @@ export const decryptPermission = async function (
       permission.kind,
       'number',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
     );
   }
   return decryptedPermission;
@@ -94,7 +99,7 @@ export const decryptPermission = async function (
 export const decryptPermissions = async function (
   this: StorageService,
   permissions: Permission_ENCRYPTED[],
-  withLockedVault: { iv: string; password: string } | undefined = undefined
+  withLockedVault: { iv: string; password: string } | undefined = undefined,
 ): Promise<Permission_DECRYPTED[]> {
   const decryptedPermissions: Permission_DECRYPTED[] = [];
 
@@ -102,7 +107,7 @@ export const decryptPermissions = async function (
     const decryptedPermission = await decryptPermission.call(
       this,
       permission,
-      withLockedVault
+      withLockedVault,
     );
     decryptedPermissions.push(decryptedPermission);
   }

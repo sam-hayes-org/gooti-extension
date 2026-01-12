@@ -31,7 +31,7 @@ export class HomeComponent implements OnInit {
 
   onClickNavigateTo(destination: 'keys' | 'permissions' | 'relays') {
     this.#router.navigateByUrl(
-      `/edit-identity/${this.identity?.id}/${destination}`
+      `/edit-identity/${this.identity?.id}/${destination}`,
     );
   }
 
@@ -41,8 +41,9 @@ export class HomeComponent implements OnInit {
   }
 
   #initialize(selectedIdentityId: string) {
-    this.identity = this.#storage
-      .getBrowserSessionHandler()
-      .browserSessionData?.identities.find((x) => x.id === selectedIdentityId);
+    this.identity =
+      this.#storage.getBrowserSessionHandler().browserSessionData?.[
+        `identity_${selectedIdentityId}`
+      ];
   }
 }

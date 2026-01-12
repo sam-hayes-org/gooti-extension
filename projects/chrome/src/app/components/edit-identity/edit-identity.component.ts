@@ -36,9 +36,10 @@ export class EditIdentityComponent implements OnInit {
       return;
     }
 
-    this.identity = this.#storage
-      .getBrowserSessionHandler()
-      .browserSessionData?.identities.find((x) => x.id === selectedIdentityId);
+    this.identity =
+      this.#storage.getBrowserSessionHandler().browserSessionData?.[
+        `identity_${selectedIdentityId}`
+      ];
   }
 
   async onClickEditNick() {

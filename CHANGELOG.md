@@ -14,8 +14,9 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- Upgrade from Angular 19 to Angular 21.
+- Refactor the vault data structure to optimize sync storage utilization.
 - The vault password to unlock the vault can be applied with pressing ENTER. 
+- Upgrade from Angular 19 to Angular 21.
 
 
 ## [chrome-0.0.4] - 2025-02-15

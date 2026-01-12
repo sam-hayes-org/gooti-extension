@@ -60,11 +60,11 @@ export const getBrowserSyncData = async function (): Promise<
 
   if (gootiMetaData.syncFlow === BrowserSyncFlow.NO_SYNC) {
     browserSyncData = (await browser.storage.local.get(
-      null
+      null,
     )) as unknown as BrowserSyncData;
   } else if (gootiMetaData.syncFlow === BrowserSyncFlow.BROWSER_SYNC) {
     browserSyncData = (await browser.storage.sync.get(
-      null
+      null,
     )) as unknown as BrowserSyncData;
   }
 
@@ -72,16 +72,21 @@ export const getBrowserSyncData = async function (): Promise<
 };
 
 export const savePermissionsToBrowserSyncStorage = async function (
-  permissions: Permission_ENCRYPTED[]
+  newPermissions: string[],
+  newPermission: Permission_ENCRYPTED,
 ): Promise<void> {
   const gootiMetaHandler = new FirefoxMetaHandler();
   const gootiMetaData =
     (await gootiMetaHandler.loadFullData()) as GootiMetaData;
 
+  const data: Record<string, any> = {};
+  data['permissions'] = newPermissions;
+  data[`permission_${newPermission.id}`] = newPermission;
+
   if (gootiMetaData.syncFlow === BrowserSyncFlow.NO_SYNC) {
-    await browser.storage.local.set({ permissions });
+    await browser.storage.local.set(data);
   } else if (gootiMetaData.syncFlow === BrowserSyncFlow.BROWSER_SYNC) {
-    await browser.storage.sync.set({ permissions });
+    await browser.storage.sync.set(data);
   }
 };
 
@@ -90,12 +95,24 @@ export const checkPermissions = function (
   identity: Identity_DECRYPTED,
   host: string,
   method: Nip07Method,
-  params: any
+  params: any,
 ): boolean | undefined {
-  const permissions = browserSessionData.permissions.filter(
-    (x) =>
-      x.identityId === identity.id && x.host === host && x.method === method
-  );
+  const permissionIds = browserSessionData.permissions;
+  const permissions: Permission_DECRYPTED[] = [];
+  for (const permissionId of permissionIds) {
+    const permission = browserSessionData[`permission_${permissionId}`];
+    if (!permission) {
+      continue;
+    }
+
+    if (
+      permission.identityId === identity.id &&
+      permission.host === host &&
+      permission.method === method
+    ) {
+      permissions.push(permission);
+    }
+  }
 
   if (permissions.length === 0) {
     return undefined;
@@ -116,7 +133,7 @@ export const checkPermissions = function (
     const eventTemplate = params as EventTemplate;
     if (
       permissions.find(
-        (x) => x.methodPolicy === 'allow' && typeof x.kind === 'undefined'
+        (x) => x.methodPolicy === 'allow' && typeof x.kind === 'undefined',
       )
     ) {
       return true;
@@ -124,7 +141,7 @@ export const checkPermissions = function (
 
     if (
       permissions.some(
-        (x) => x.methodPolicy === 'allow' && x.kind === eventTemplate.kind
+        (x) => x.methodPolicy === 'allow' && x.kind === eventTemplate.kind,
       )
     ) {
       return true;
@@ -132,7 +149,7 @@ export const checkPermissions = function (
 
     if (
       permissions.some(
-        (x) => x.methodPolicy === 'deny' && x.kind === eventTemplate.kind
+        (x) => x.methodPolicy === 'deny' && x.kind === eventTemplate.kind,
       )
     ) {
       return false;
@@ -170,7 +187,7 @@ export const storePermission = async function (
   host: string,
   method: Nip07Method,
   methodPolicy: Nip07MethodPolicy,
-  kind?: number
+  kind?: number,
 ) {
   const browserSyncData = await getBrowserSyncData();
   if (!browserSyncData) {
@@ -188,20 +205,23 @@ export const storePermission = async function (
 
   // Store session data
   await browser.storage.session.set({
-    permissions: [...browserSessionData.permissions, permission],
+    permissions: [...browserSessionData.permissions, permission.id],
+  });
+  await browser.storage.session.set({
+    [`permission_${permission.id}`]: permission,
   });
 
   // Encrypt permission to store in sync storage (depending on sync flow).
   const encryptedPermission = await encryptPermission(
     permission,
     browserSessionData.iv,
-    browserSessionData.vaultPassword as string
+    browserSessionData.vaultPassword as string,
   );
 
-  await savePermissionsToBrowserSyncStorage([
-    ...browserSyncData.permissions,
+  await savePermissionsToBrowserSyncStorage(
+    [...browserSyncData.permissions, encryptedPermission.id],
     encryptedPermission,
-  ]);
+  );
 };
 
 export const getPosition = async function (width: number, height: number) {
@@ -236,7 +256,7 @@ export const getPosition = async function (width: number, height: number) {
 
 export const signEvent = function (
   eventTemplate: EventTemplate,
-  privkey: string
+  privkey: string,
 ): Event {
   return finalizeEvent(eventTemplate, NostrHelper.hex2bytes(privkey));
 };
@@ -244,23 +264,23 @@ export const signEvent = function (
 export const nip04Encrypt = async function (
   privkey: string,
   peerPubkey: string,
-  plaintext: string
+  plaintext: string,
 ): Promise<string> {
   return await nip04.encrypt(
     NostrHelper.hex2bytes(privkey),
     peerPubkey,
-    plaintext
+    plaintext,
   );
 };
 
 export const nip44Encrypt = async function (
   privkey: string,
   peerPubkey: string,
-  plaintext: string
+  plaintext: string,
 ): Promise<string> {
   const key = nip44.v2.utils.getConversationKey(
     NostrHelper.hex2bytes(privkey),
-    peerPubkey
+    peerPubkey,
   );
   return nip44.v2.encrypt(plaintext, key);
 };
@@ -268,23 +288,23 @@ export const nip44Encrypt = async function (
 export const nip04Decrypt = async function (
   privkey: string,
   peerPubkey: string,
-  ciphertext: string
+  ciphertext: string,
 ): Promise<string> {
   return await nip04.decrypt(
     NostrHelper.hex2bytes(privkey),
     peerPubkey,
-    ciphertext
+    ciphertext,
   );
 };
 
 export const nip44Decrypt = async function (
   privkey: string,
   peerPubkey: string,
-  ciphertext: string
+  ciphertext: string,
 ): Promise<string> {
   const key = nip44.v2.utils.getConversationKey(
     NostrHelper.hex2bytes(privkey),
-    peerPubkey
+    peerPubkey,
   );
 
   return nip44.v2.decrypt(ciphertext, key);
@@ -293,7 +313,7 @@ export const nip44Decrypt = async function (
 const encryptPermission = async function (
   permission: Permission_DECRYPTED,
   iv: string,
-  password: string
+  password: string,
 ): Promise<Permission_ENCRYPTED> {
   const encryptedPermission: Permission_ENCRYPTED = {
     id: await encrypt(permission.id, iv, password),
@@ -307,7 +327,7 @@ const encryptPermission = async function (
     encryptedPermission.kind = await encrypt(
       permission.kind.toString(),
       iv,
-      password
+      password,
     );
   }
 
@@ -317,7 +337,7 @@ const encryptPermission = async function (
 const encrypt = async function (
   value: string,
   iv: string,
-  password: string
+  password: string,
 ): Promise<string> {
   return await CryptoHelper.encrypt(value, iv, password);
 };

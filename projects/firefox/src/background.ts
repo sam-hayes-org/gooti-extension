@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NostrHelper } from '@common';
+import { Identity_DECRYPTED, NostrHelper } from '@common';
 import {
   BackgroundRequestMessage,
   checkPermissions,
@@ -39,7 +39,7 @@ browser.runtime.onMessage.addListener(async (message: any /*, sender*/) => {
     const openPrompt = openPrompts.get(promptResponse.id);
     if (!openPrompt) {
       throw new Error(
-        'Prompt response could not be matched to any previous request.'
+        'Prompt response could not be matched to any previous request.',
       );
     }
 
@@ -54,9 +54,9 @@ browser.runtime.onMessage.addListener(async (message: any /*, sender*/) => {
     throw new Error('Gooti vault not unlocked by the user.');
   }
 
-  const currentIdentity = browserSessionData.identities.find(
-    (x) => x.id === browserSessionData.selectedIdentityId
-  );
+  const currentIdentity = browserSessionData[
+    `identity_${browserSessionData.selectedIdentityId}`
+  ] as Identity_DECRYPTED | undefined;
 
   if (!currentIdentity) {
     throw new Error('No Nostr identity available at endpoint.');
@@ -68,7 +68,7 @@ browser.runtime.onMessage.addListener(async (message: any /*, sender*/) => {
     currentIdentity,
     req.host,
     req.method,
-    req.params
+    req.params,
   );
 
   if (permissionState === false) {
@@ -82,7 +82,7 @@ browser.runtime.onMessage.addListener(async (message: any /*, sender*/) => {
     const { top, left } = await getPosition(width, height);
 
     const base64Event = Buffer.from(
-      JSON.stringify(req.params ?? {}, undefined, 2)
+      JSON.stringify(req.params ?? {}, undefined, 2),
     ).toString('base64');
 
     const response = await new Promise<PromptResponse>((resolve, reject) => {
@@ -105,7 +105,7 @@ browser.runtime.onMessage.addListener(async (message: any /*, sender*/) => {
         req.host,
         req.method,
         response === 'approve' ? 'allow' : 'deny',
-        req.params?.kind
+        req.params?.kind,
       );
     }
 
@@ -134,28 +134,28 @@ browser.runtime.onMessage.addListener(async (message: any /*, sender*/) => {
       return await nip04Encrypt(
         currentIdentity.privkey,
         req.params.peerPubkey,
-        req.params.plaintext
+        req.params.plaintext,
       );
 
     case 'nip44.encrypt':
       return await nip44Encrypt(
         currentIdentity.privkey,
         req.params.peerPubkey,
-        req.params.plaintext
+        req.params.plaintext,
       );
 
     case 'nip04.decrypt':
       return await nip04Decrypt(
         currentIdentity.privkey,
         req.params.peerPubkey,
-        req.params.ciphertext
+        req.params.ciphertext,
       );
 
     case 'nip44.decrypt':
       return await nip44Decrypt(
         currentIdentity.privkey,
         req.params.peerPubkey,
-        req.params.ciphertext
+        req.params.ciphertext,
       );
 
     default:
