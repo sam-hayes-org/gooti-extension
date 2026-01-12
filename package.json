@@ -1,12 +1,12 @@
 {
   "name": "gooti-extension",
-  "version": "0.0.5",
+  "version": "1.0.0",
   "custom": {
     "chrome": {
-      "version": "0.0.5"
+      "version": "1.0.0"
     },
     "firefox": {
-      "version": "0.0.5"
+      "version": "1.0.0"
     }
   },
   "scripts": {
