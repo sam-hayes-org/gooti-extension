@@ -34,7 +34,7 @@ export class VaultLoginComponent {
     try {
       await this.#storage.unlockVault(password ?? this.loginPassword);
       this.#router.navigateByUrl('/home/identities');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       this.showInvalidPasswordAlert = true;
       window.setTimeout(() => {
@@ -46,7 +46,10 @@ export class VaultLoginComponent {
   async onClickResetExtension() {
     try {
       await this.#storage.resetExtension();
-      this.#startup.startOver(getNewStorageServiceConfig());
+      this.#startup.startOver(
+        getNewStorageServiceConfig(),
+        this.#startup.startupDetails,
+      );
     } catch (error) {
       console.log(error);
       // TODO

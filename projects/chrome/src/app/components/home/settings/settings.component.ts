@@ -59,7 +59,10 @@ export class SettingsComponent extends NavComponent implements OnInit {
   async onResetExtension() {
     try {
       await this.#storage.resetExtension();
-      this.#startup.startOver(getNewStorageServiceConfig());
+      this.#startup.startOver(
+        getNewStorageServiceConfig(),
+        this.#startup.startupDetails,
+      );
     } catch (error) {
       console.log(error);
       // TODO

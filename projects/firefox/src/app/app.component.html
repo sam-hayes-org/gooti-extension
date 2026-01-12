@@ -1,1 +1,16 @@
-<router-outlet></router-outlet>
+<div>
+  <router-outlet></router-outlet>
+</div>
+
+@if (message) {
+  <div>
+    <div
+      class="alert alert-danger sam-flex-row gap"
+      style="margin-bottom: 2px"
+      role="alert"
+    >
+      <i class="bi bi-exclamation-triangle"></i>
+      <span>{{ message }}</span>
+    </div>
+  </div>
+}
