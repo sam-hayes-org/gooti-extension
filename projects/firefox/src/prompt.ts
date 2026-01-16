@@ -1,7 +1,6 @@
 import browser from 'webextension-polyfill';
 import { Buffer } from 'buffer';
-import { Nip07Method } from '@common';
-import { PromptResponse, PromptResponseMessage } from './background-common';
+import { Nip07Method, PromptResponse, PromptResponseMessage } from '@common';
 
 const params = new URLSearchParams(location.search);
 const id = params.get('id') as string;

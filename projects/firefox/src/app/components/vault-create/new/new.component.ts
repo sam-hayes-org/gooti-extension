@@ -10,10 +10,10 @@ import { NavComponent, StorageService } from '@common';
   styleUrl: './new.component.scss',
 })
 export class NewComponent extends NavComponent {
-  password = '';
-
   readonly #router = inject(Router);
   readonly #storage = inject(StorageService);
+  protected password = '';
+  protected minPasswordLength = 4;
 
   toggleType(element: HTMLInputElement) {
     if (element.type === 'password') {
@@ -23,8 +23,8 @@ export class NewComponent extends NavComponent {
     }
   }
 
-  async createVault() {
-    if (!this.password) {
+  async createVault(password: string) {
+    if (!password || password.length < this.minPasswordLength) {
       return;
     }
 
