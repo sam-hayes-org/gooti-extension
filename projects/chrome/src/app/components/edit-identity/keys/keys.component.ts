@@ -52,9 +52,10 @@ export class KeysComponent extends NavComponent implements OnInit {
   }
 
   async #initialize(identityId: string) {
-    const identity = this.#storage
-      .getBrowserSessionHandler()
-      .browserSessionData?.identities.find((x) => x.id === identityId);
+    const identity =
+      this.#storage.getBrowserSessionHandler().browserSessionData?.[
+        `identity_${identityId}`
+      ];
 
     if (!identity) {
       return;

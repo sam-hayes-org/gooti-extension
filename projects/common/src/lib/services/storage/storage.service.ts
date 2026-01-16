@@ -14,11 +14,13 @@ import { CryptoHelper } from '@common';
 import {
   addIdentity,
   deleteIdentity,
+  editNick,
   switchIdentity,
 } from './related/identity';
 import { deletePermission } from './related/permission';
 import { createNewVault, deleteVault, unlockVault } from './related/vault';
 import { addRelay, deleteRelay, updateRelay } from './related/relay';
+import { migrateFromV1ToV2 } from './migrations/migrate-from-v1-to-v2';
 
 export interface StorageServiceConfig {
   browserSessionHandler: BrowserSessionHandler;
@@ -31,7 +33,7 @@ export interface StorageServiceConfig {
   providedIn: 'root',
 })
 export class StorageService {
-  readonly latestVersion = 1;
+  readonly latestVersion = 2;
   isInitialized = false;
 
   #browserSessionHandler!: BrowserSessionHandler;
@@ -131,6 +133,13 @@ export class StorageService {
     await createNewVault.call(this, password);
   }
 
+  async editNick(
+    decryptedIdentityId: string,
+    decryptedNewNick: string,
+  ): Promise<void> {
+    await editNick.call(this, decryptedIdentityId, decryptedNewNick);
+  }
+
   async addIdentity(data: {
     nick: string;
     privkeyString: string;
@@ -172,7 +181,7 @@ export class StorageService {
     const vaultJson = JSON.stringify(
       this.getBrowserSyncHandler().browserSyncData,
       undefined,
-      4
+      4,
     );
     return vaultJson;
   }
@@ -181,14 +190,14 @@ export class StorageService {
     this.assureIsInitialized();
 
     const isValidData = this.#allegedBrowserSyncDataIsValid(
-      allegedBrowserSyncData
+      allegedBrowserSyncData,
     );
     if (!isValidData) {
       throw new Error('The imported data is not valid.');
     }
 
     await this.getBrowserSyncHandler().saveAndSetFullData(
-      allegedBrowserSyncData
+      allegedBrowserSyncData,
     );
   }
 
@@ -223,7 +232,7 @@ export class StorageService {
   assureIsInitialized(): void {
     if (!this.isInitialized) {
       throw new Error(
-        'StorageService is not initialized. Please call "initialize(...)" before doing anything else.'
+        'StorageService is not initialized. Please call "initialize(...)" before doing anything else.',
       );
     }
   }
@@ -238,13 +247,13 @@ export class StorageService {
     return CryptoHelper.encrypt(
       value,
       browserSessionData.iv,
-      browserSessionData.vaultPassword
+      browserSessionData.vaultPassword,
     );
   }
 
   async decrypt(
     value: string,
-    returnType: 'string' | 'number' | 'boolean'
+    returnType: 'string' | 'number' | 'boolean',
   ): Promise<any> {
     const browserSessionData =
       this.getBrowserSessionHandler().browserSessionData;
@@ -256,7 +265,7 @@ export class StorageService {
       value,
       returnType,
       browserSessionData.iv,
-      browserSessionData.vaultPassword
+      browserSessionData.vaultPassword,
     );
   }
 
@@ -264,7 +273,7 @@ export class StorageService {
     value: string,
     returnType: 'string' | 'number' | 'boolean',
     iv: string,
-    password: string
+    password: string,
   ): Promise<any> {
     const decryptedValue = await CryptoHelper.decrypt(value, iv, password);
 
@@ -296,10 +305,29 @@ export class StorageService {
       };
     }
 
-    // Will be implemented if migration is required.
+    // Determine, if migration is required.
+    let workingData: any = browserSyncData;
+    let migrationWasPerformed = false;
+    const allegedVersion = browserSyncData['version'] as number;
+    if (allegedVersion < this.latestVersion) {
+      // Migration required.
+
+      for (let v = allegedVersion + 1; v <= this.latestVersion; v++) {
+        switch (v) {
+          case 2:
+            // Migration to version 2
+            workingData = migrateFromV1ToV2(workingData);
+            migrationWasPerformed = true;
+            break;
+
+          // TODO: Add future migrations here.
+        }
+      }
+    }
+
     return {
-      browserSyncData: browserSyncData as BrowserSyncData,
-      migrationWasPerformed: false,
+      browserSyncData: workingData as BrowserSyncData,
+      migrationWasPerformed,
     };
   }
 

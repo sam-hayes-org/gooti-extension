@@ -1,5 +1,5 @@
+import { BackgroundRequestMessage } from '@common';
 import browser from 'webextension-polyfill';
-import { BackgroundRequestMessage } from './background-common';
 
 // Inject the script that will provide window.nostr
 // The script needs to run before any other scripts from the real

@@ -6,6 +6,12 @@ import {
   StorageServiceConfig,
 } from '../storage/storage.service';
 
+export type StartupSource = 'background' | 'click';
+export interface StartupDetails {
+  source: StartupSource;
+  id?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -13,13 +19,21 @@ export class StartupService {
   readonly #logger = inject(LoggerService);
   readonly #storage = inject(StorageService);
   readonly #router = inject(Router);
+  #startupDetails: StartupDetails = {
+    source: 'click',
+  };
 
-  async startOver(storageConfig: StorageServiceConfig) {
+  get startupDetails(): StartupDetails {
+    return this.#startupDetails;
+  }
+
+  async startOver(storageConfig: StorageServiceConfig, details: StartupDetails) {
+    this.#startupDetails = details;
     this.#storage.initialize(storageConfig);
 
     // Step 0:
     storageConfig.browserSyncNoHandler.setIgnoreProperties(
-      storageConfig.gootiMetaHandler.metaProperties
+      storageConfig.gootiMetaHandler.metaProperties,
     );
 
     // Step 1: Load the gooti's user settings
@@ -75,7 +89,7 @@ export class StartupService {
         ?.selectedIdentityId;
 
     this.#router.navigateByUrl(
-      `/home/${selectedIdentityId ? 'identity' : 'identities'}`
+      `/home/${selectedIdentityId ? 'identity' : 'identities'}`,
     );
   }
 }

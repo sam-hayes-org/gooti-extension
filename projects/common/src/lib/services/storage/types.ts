@@ -25,7 +25,12 @@ export interface Identity_DECRYPTED {
   privkey: string;
 }
 
-export type Identity_ENCRYPTED = Identity_DECRYPTED;
+export interface Identity_ENCRYPTED {
+  id: string;
+  createdAt: string;
+  nick: string;
+  privkey: string;
+}
 
 export interface Relay_DECRYPTED {
   id: string;
@@ -49,12 +54,13 @@ export interface BrowserSyncData_PART_Unencrypted {
   vaultHash: string;
 }
 
-export interface BrowserSyncData_PART_Encrypted {
+export type BrowserSyncData_PART_Encrypted = {
   selectedIdentityId: string | null;
-  permissions: Permission_ENCRYPTED[];
-  identities: Identity_ENCRYPTED[];
+  permissions: string[];
+  identities: string[];
   relays: Relay_ENCRYPTED[];
-}
+} & Partial<Record<`permission_${string}`, Permission_ENCRYPTED>> & // Optional to allow empty/missing
+  Partial<Record<`identity_${string}`, Identity_ENCRYPTED>>;
 
 export type BrowserSyncData = BrowserSyncData_PART_Unencrypted &
   BrowserSyncData_PART_Encrypted;
@@ -66,18 +72,26 @@ export enum BrowserSyncFlow {
   CUSTOM_SYNC = 3,
 }
 
-export interface BrowserSessionData {
+export interface BrowserSyncUtilization {
+  bytesInUse: number;
+  quotaBytes: number;
+  quotaBytesPerItem: number;
+  quotaItems: number;
+}
+
+export type BrowserSessionData = {
   // The following properties purely come from the browser session storage
   // and will never be going into the browser sync storage.
   vaultPassword?: string;
 
   // The following properties initially come from the browser sync storage.
   iv: string;
-  permissions: Permission_DECRYPTED[];
-  identities: Identity_DECRYPTED[];
+  permissions: string[];
+  identities: string[];
   selectedIdentityId: string | null;
   relays: Relay_DECRYPTED[];
-}
+} & Partial<Record<`permission_${string}`, Permission_DECRYPTED>> & // Optional to allow empty/missing
+  Partial<Record<`identity_${string}`, Identity_DECRYPTED>>;
 
 export interface GootiMetaData_VaultSnapshot {
   fileName: string;

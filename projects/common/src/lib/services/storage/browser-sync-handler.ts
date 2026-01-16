@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   BrowserSyncData,
+  BrowserSyncUtilization,
   Identity_ENCRYPTED,
   Permission_ENCRYPTED,
   Relay_ENCRYPTED,
@@ -46,18 +47,65 @@ export abstract class BrowserSyncHandler {
   }
 
   /**
+   * Persist the permission to the sync data storage.
+   *
+   * ATTENTION: In your implementation, make sure to call "setPartialData_Permission(..)" at the end to update the in-memory data.
+   */
+  abstract saveAndSetPartialData_Permission(data: {
+    permission: Permission_ENCRYPTED;
+  }): Promise<void>;
+  setPartialData_Permission(data: { permission: Permission_ENCRYPTED }) {
+    if (!this.#browserSyncData) {
+      return;
+    }
+    this.#browserSyncData[`permission_${data.permission.id}`] = data.permission;
+  }
+
+  /**
    * Persist the permissions to the sync data storage.
    *
    * ATTENTION: In your implementation, make sure to call "setPartialData_Permissions(..)" at the end to update the in-memory data.
    */
   abstract saveAndSetPartialData_Permissions(data: {
-    permissions: Permission_ENCRYPTED[];
+    permissions: string[];
   }): Promise<void>;
-  setPartialData_Permissions(data: { permissions: Permission_ENCRYPTED[] }) {
+
+  setPartialData_Permissions(data: { permissions: string[] }) {
     if (!this.#browserSyncData) {
       return;
     }
     this.#browserSyncData.permissions = Array.from(data.permissions);
+  }
+
+  /**
+   * Delete the permission from the sync data storage.
+   *
+   * ATTENTION: In your implementation, make sure to call "unsetPartialData_Permission(..)" at the end to update the in-memory data.
+   */
+  abstract deleteSaveAndUnsetPartialData_Permission(data: {
+    permissionId: string;
+  }): Promise<void>;
+  unsetPartialData_Permission(data: { permissionId: string }) {
+    if (!this.#browserSyncData) {
+      return;
+    }
+    delete this.#browserSyncData[`permission_${data.permissionId}`];
+  }
+
+  /**
+   * Persist the identity to the sync data storage.
+   *
+   * ATTENTION: In your implementation, make sure to call "setPartialData_Identities(..)" at the end to update the in-memory data.
+   */
+  abstract saveAndSetPartialData_Identity(data: {
+    identity: Identity_ENCRYPTED;
+  }): Promise<void>;
+
+  setPartialData_Identity(data: { identity: Identity_ENCRYPTED }) {
+    if (!this.#browserSyncData) {
+      return;
+    }
+    this.#browserSyncData[`identity_${data.identity.id}`] = data.identity;
   }
 
   /**
@@ -66,14 +114,29 @@ export abstract class BrowserSyncHandler {
    * ATTENTION: In your implementation, make sure to call "setPartialData_Identities(..)" at the end to update the in-memory data.
    */
   abstract saveAndSetPartialData_Identities(data: {
-    identities: Identity_ENCRYPTED[];
+    identities: string[];
   }): Promise<void>;
 
-  setPartialData_Identities(data: { identities: Identity_ENCRYPTED[] }) {
+  setPartialData_Identities(data: { identities: string[] }) {
     if (!this.#browserSyncData) {
       return;
     }
     this.#browserSyncData.identities = Array.from(data.identities);
+  }
+
+  /**
+   * Delete the identity from the sync data storage.
+   *
+   * ATTENTION: In your implementation, make sure to call "unsetPartialData_Identity(..)" at the end to update the in-memory data.
+   */
+  abstract deleteSaveAndUnsetPartialData_Identity(data: {
+    identityId: string;
+  }): Promise<void>;
+  unsetPartialData_Identity(data: { identityId: string }) {
+    if (!this.#browserSyncData) {
+      return;
+    }
+    delete this.#browserSyncData[`identity_${data.identityId}`];
   }
 
   /**
@@ -108,4 +171,6 @@ export abstract class BrowserSyncHandler {
    * Clear all data from the sync data storage.
    */
   abstract clearData(): Promise<void>;
+
+  getUtilization?(): Promise<BrowserSyncUtilization>;
 }

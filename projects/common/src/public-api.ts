@@ -4,6 +4,7 @@
 
 // Common
 export * from './lib/common/nav-component';
+export * from './lib/common/sleep';
 
 // Helpers
 export * from './lib/helpers/crypto-helper';
@@ -34,3 +35,6 @@ export * from './lib/components/relay-rw/relay-rw.component';
 // Pipes
 export * from './lib/pipes/visual-relay.pipe';
 export * from './lib/pipes/visual-nip05.pipe';
+
+// Background
+export * from './lib/background';

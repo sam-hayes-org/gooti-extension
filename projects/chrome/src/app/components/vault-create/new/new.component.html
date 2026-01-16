@@ -5,7 +5,7 @@
 <div class="content">
   <div class="sam-flex-column gap" style="align-items: center">
     <div class="logo-frame">
-      <img src="gooti.svg" height="120" width="120" alt=""/>
+      <img src="gooti.svg" height="120" width="120" alt="" />
     </div>
 
     <span class="sam-mt-2"> Please define a password for your vault. </span>
@@ -22,6 +22,7 @@
         style="font-size: 1rem"
         placeholder="vault password"
         [(ngModel)]="password"
+        (keydown.enter)="createVault(passwordInputElement.value)"
       />
       <button
         class="btn btn-outline-secondary"
@@ -37,10 +38,10 @@
     </div>
 
     <button
-      [disabled]="!password || password.length < 4"
+      [disabled]="!password || password.length < minPasswordLength"
       type="button"
       class="sam-mt btn btn-primary"
-      (click)="createVault()"
+      (click)="createVault(password)"
     >
       Create vault
     </button>

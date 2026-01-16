@@ -42,7 +42,10 @@ export class VaultImportComponent extends NavComponent implements OnInit {
       await this.#storage.deleteVault(true);
       await this.#storage.importVault(this.selectedSnapshot.data);
       this.#storage.isInitialized = false;
-      this.#startup.startOver(getNewStorageServiceConfig());
+      this.#startup.startOver(
+        getNewStorageServiceConfig(),
+        this.#startup.startupDetails,
+      );
     } catch (error) {
       console.log(error);
       // TODO
