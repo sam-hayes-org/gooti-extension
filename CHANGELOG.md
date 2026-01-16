@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+### Added
+
+### Changed
+
+
+## [1.0.0] - 2026-01-16
+
+### Fixed
+
 - Auto fix simple mistakes when adding a new relay.
 
 ### Added
@@ -32,6 +41,8 @@ All notable changes to this project will be documented in this file.
 
 ## [chrome-0.0.1] - 2025-02-01
 
+
+[1.0.0]: https://github.com/sam-hayes-org/gooti-extension/compare/chrome-0.0.4...chrome-1.0.0
 [chrome-0.0.4]: https://github.com/sam-hayes-org/gooti-extension/compare/chrome-0.0.3...chrome-0.0.4
 [chrome-0.0.3]: https://github.com/sam-hayes-org/gooti-extension/compare/chrome-0.0.2...chrome-0.0.3
 [chrome-0.0.2]: https://github.com/sam-hayes-org/gooti-extension/compare/chrome-0.0.1...chrome-0.0.2
