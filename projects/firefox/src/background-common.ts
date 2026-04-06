@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   BackgroundCommon,
+  AutoLockConfig,
   BrowserSessionData,
   BrowserSyncData,
   BrowserSyncFlow,
@@ -85,7 +86,6 @@ export class FirefoxBackgroundCommon extends BackgroundCommon {
       kind,
     };
 
-    // Store session data
     await browser.storage.session.set({
       permissions: [...browserSessionData.permissions, permission.id],
     });
@@ -93,11 +93,13 @@ export class FirefoxBackgroundCommon extends BackgroundCommon {
       [`permission_${permission.id}`]: permission,
     });
 
-    // Encrypt permission to store in sync storage (depending on sync flow).
+    const kdfParams = this.getKdfParams(browserSyncData);
     const encryptedPermission = await this.encryptPermission(
       permission,
       browserSessionData.iv,
       browserSessionData.vaultPassword as string,
+      kdfParams.salt,
+      kdfParams.iterations,
     );
 
     await this.savePermissionsToBrowserSyncStorage(
@@ -120,19 +122,39 @@ export class FirefoxBackgroundCommon extends BackgroundCommon {
         lastFocused.width !== undefined &&
         lastFocused.height !== undefined
       ) {
-        // Position window in the center of the lastFocused window
         top = Math.round(lastFocused.top + (lastFocused.height - height) / 2);
         left = Math.round(lastFocused.left + (lastFocused.width - width) / 2);
-      } else {
-        console.error('Last focused window properties are undefined.');
       }
-    } catch (error) {
-      console.error('Error getting window position:', error);
+    } catch {
+      // Ignore errors
     }
 
     return {
       top,
       left,
     };
+  }
+
+  async clearSessionData(): Promise<void> {
+    await browser.storage.session.clear();
+  }
+
+  protected async getAutoLockConfigFromStorage(): Promise<AutoLockConfig | null> {
+    const result = (await browser.storage.local.get(
+      this.AUTO_LOCK_CONFIG_KEY,
+    )) as Record<string, unknown>;
+    const config = result[this.AUTO_LOCK_CONFIG_KEY] as
+      | { timeoutMinutes?: number }
+      | undefined;
+    if (config && typeof config.timeoutMinutes === 'number') {
+      return config as AutoLockConfig;
+    }
+    return null;
+  }
+
+  protected async saveAutoLockConfigToStorage(
+    config: AutoLockConfig,
+  ): Promise<void> {
+    await browser.storage.local.set({ [this.AUTO_LOCK_CONFIG_KEY]: config });
   }
 }

@@ -10,7 +10,14 @@ import {
   Relay_DECRYPTED,
 } from './types';
 import { GootiMetaHandler } from './gooti-meta-handler';
-import { CryptoHelper } from '@common';
+import {
+  CryptoHelper,
+  KDF_VERSION_CURRENT,
+  KDF_ITERATIONS_V2,
+  KDF_VERSION_LEGACY,
+  KDF_SALT_V1,
+  KDF_ITERATIONS_V1,
+} from '@common';
 import {
   addIdentity,
   deleteIdentity,
@@ -244,10 +251,14 @@ export class StorageService {
       throw new Error('Browser session data is undefined.');
     }
 
+    const kdfParams = this.getKdfParams();
+
     return CryptoHelper.encrypt(
       value,
       browserSessionData.iv,
       browserSessionData.vaultPassword,
+      kdfParams.salt,
+      kdfParams.iterations,
     );
   }
 
@@ -274,8 +285,19 @@ export class StorageService {
     returnType: 'string' | 'number' | 'boolean',
     iv: string,
     password: string,
+    kdfSalt?: string,
+    kdfIterations?: number,
   ): Promise<any> {
-    const decryptedValue = await CryptoHelper.decrypt(value, iv, password);
+    const salt = kdfSalt ?? KDF_SALT_V1;
+    const iterations = kdfIterations ?? KDF_ITERATIONS_V1;
+
+    const decryptedValue = await CryptoHelper.decrypt(
+      value,
+      iv,
+      password,
+      salt,
+      iterations,
+    );
 
     switch (returnType) {
       case 'number':
@@ -288,6 +310,27 @@ export class StorageService {
       default:
         return decryptedValue;
     }
+  }
+
+  getKdfParams(): { salt: string; iterations: number; version: number } {
+    const browserSyncData = this.getBrowserSyncHandler().browserSyncData;
+
+    if (
+      browserSyncData?.kdfVersion === KDF_VERSION_CURRENT &&
+      browserSyncData.kdfSalt
+    ) {
+      return {
+        salt: browserSyncData.kdfSalt,
+        iterations: KDF_ITERATIONS_V2,
+        version: KDF_VERSION_CURRENT,
+      };
+    }
+
+    return {
+      salt: KDF_SALT_V1,
+      iterations: KDF_ITERATIONS_V1,
+      version: KDF_VERSION_LEGACY,
+    };
   }
 
   /**

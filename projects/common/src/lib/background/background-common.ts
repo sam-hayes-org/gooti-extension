@@ -3,7 +3,13 @@
 import { EventTemplate, finalizeEvent, nip04, nip44, Event } from 'nostr-tools';
 import { Nip07Method, Nip07MethodPolicy } from '../models/nostr';
 import { NostrHelper } from '../helpers/nostr-helper';
-import { CryptoHelper } from '../helpers/crypto-helper';
+import {
+  CryptoHelper,
+  KDF_SALT_V1,
+  KDF_ITERATIONS_V1,
+  KDF_ITERATIONS_V2,
+  KDF_VERSION_CURRENT,
+} from '../helpers/crypto-helper';
 import {
   BrowserSessionData,
   BrowserSyncData,
@@ -35,6 +41,12 @@ export interface BackgroundRequestMessage {
   host: string;
 }
 
+export type AutoLockTimeout = 0 | 5 | 15 | 30 | 60;
+
+export interface AutoLockConfig {
+  timeoutMinutes: AutoLockTimeout;
+}
+
 export abstract class BackgroundCommon {
   abstract getBrowserSessionData(): Promise<BrowserSessionData | undefined>;
   abstract getBrowserSyncData(): Promise<BrowserSyncData | undefined>;
@@ -57,6 +69,75 @@ export abstract class BackgroundCommon {
     left: number;
     top: number;
   }>;
+  abstract clearSessionData(): Promise<void>;
+
+  #autoLockTimerId: ReturnType<typeof setTimeout> | null = null;
+  #autoLockConfig: AutoLockConfig = { timeoutMinutes: 15 };
+  readonly autoLockTimeoutOptions: AutoLockTimeout[] = [0, 5, 15, 30, 60];
+  readonly AUTO_LOCK_CONFIG_KEY = 'gooti_autoLockConfig';
+
+  async loadAutoLockConfig(): Promise<void> {
+    try {
+      const stored = await this.getAutoLockConfigFromStorage();
+      if (
+        stored &&
+        this.autoLockTimeoutOptions.includes(stored.timeoutMinutes)
+      ) {
+        this.#autoLockConfig = stored;
+      }
+    } catch {
+      // Use default config
+    }
+  }
+
+  getAutoLockConfig(): AutoLockConfig {
+    return { ...this.#autoLockConfig };
+  }
+
+  async setAutoLockTimeout(minutes: AutoLockTimeout): Promise<void> {
+    this.#autoLockConfig.timeoutMinutes = minutes;
+    await this.saveAutoLockConfigToStorage(this.#autoLockConfig);
+    this.restartAutoLockTimer();
+  }
+
+  resetAutoLockTimer(): void {
+    if (this.#autoLockConfig.timeoutMinutes === 0) {
+      return;
+    }
+    this.restartAutoLockTimer();
+  }
+
+  stopAutoLockTimer(): void {
+    if (this.#autoLockTimerId) {
+      clearTimeout(this.#autoLockTimerId);
+      this.#autoLockTimerId = null;
+    }
+  }
+
+  private restartAutoLockTimer(): void {
+    this.stopAutoLockTimer();
+
+    if (this.#autoLockConfig.timeoutMinutes === 0) {
+      return;
+    }
+
+    this.#autoLockTimerId = setTimeout(
+      async () => {
+        await this.handleAutoLock();
+      },
+      this.#autoLockConfig.timeoutMinutes * 60 * 1000,
+    );
+  }
+
+  private async handleAutoLock(): Promise<void> {
+    this.debug('Auto-lock triggered, clearing session data');
+    await this.clearSessionData();
+  }
+
+  protected abstract getAutoLockConfigFromStorage(): Promise<AutoLockConfig | null>;
+  protected abstract saveAutoLockConfigToStorage(
+    config: AutoLockConfig,
+  ): Promise<void>;
 
   debug(message: any, type: 'log' | 'error' = 'log') {
     const dateString = new Date().toISOString();
@@ -216,13 +297,45 @@ export abstract class BackgroundCommon {
     permission: Permission_DECRYPTED,
     iv: string,
     password: string,
+    kdfSalt: string = KDF_SALT_V1,
+    kdfIterations: number = KDF_ITERATIONS_V1,
   ): Promise<Permission_ENCRYPTED> {
     const encryptedPermission: Permission_ENCRYPTED = {
-      id: await this.encrypt(permission.id, iv, password),
-      identityId: await this.encrypt(permission.identityId, iv, password),
-      host: await this.encrypt(permission.host, iv, password),
-      method: await this.encrypt(permission.method, iv, password),
-      methodPolicy: await this.encrypt(permission.methodPolicy, iv, password),
+      id: await this.encrypt(
+        permission.id,
+        iv,
+        password,
+        kdfSalt,
+        kdfIterations,
+      ),
+      identityId: await this.encrypt(
+        permission.identityId,
+        iv,
+        password,
+        kdfSalt,
+        kdfIterations,
+      ),
+      host: await this.encrypt(
+        permission.host,
+        iv,
+        password,
+        kdfSalt,
+        kdfIterations,
+      ),
+      method: await this.encrypt(
+        permission.method,
+        iv,
+        password,
+        kdfSalt,
+        kdfIterations,
+      ),
+      methodPolicy: await this.encrypt(
+        permission.methodPolicy,
+        iv,
+        password,
+        kdfSalt,
+        kdfIterations,
+      ),
     };
 
     if (typeof permission.kind !== 'undefined') {
@@ -230,13 +343,46 @@ export abstract class BackgroundCommon {
         permission.kind.toString(),
         iv,
         password,
+        kdfSalt,
+        kdfIterations,
       );
     }
 
     return encryptedPermission;
   }
 
-  async encrypt(value: string, iv: string, password: string): Promise<string> {
-    return await CryptoHelper.encrypt(value, iv, password);
+  async encrypt(
+    value: string,
+    iv: string,
+    password: string,
+    kdfSalt: string = KDF_SALT_V1,
+    kdfIterations: number = KDF_ITERATIONS_V1,
+  ): Promise<string> {
+    return await CryptoHelper.encrypt(
+      value,
+      iv,
+      password,
+      kdfSalt,
+      kdfIterations,
+    );
+  }
+
+  getKdfParams(browserSyncData: BrowserSyncData | undefined): {
+    salt: string;
+    iterations: number;
+  } {
+    if (
+      browserSyncData?.kdfVersion === KDF_VERSION_CURRENT &&
+      browserSyncData.kdfSalt
+    ) {
+      return {
+        salt: browserSyncData.kdfSalt,
+        iterations: KDF_ITERATIONS_V2,
+      };
+    }
+    return {
+      salt: KDF_SALT_V1,
+      iterations: KDF_ITERATIONS_V1,
+    };
   }
 }

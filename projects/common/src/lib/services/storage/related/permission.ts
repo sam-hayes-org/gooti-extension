@@ -37,7 +37,9 @@ export const deletePermission = async function (
 export const decryptPermission = async function (
   this: StorageService,
   permission: Permission_ENCRYPTED,
-  withLockedVault: { iv: string; password: string } | undefined = undefined,
+  withLockedVault:
+    | { iv: string; password: string; kdfSalt: string; kdfIterations: number }
+    | undefined = undefined,
 ): Promise<Permission_DECRYPTED> {
   if (typeof withLockedVault === 'undefined') {
     const decryptedPermission: Permission_DECRYPTED = {
@@ -59,30 +61,40 @@ export const decryptPermission = async function (
       'string',
       withLockedVault.iv,
       withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
     identityId: await this.decryptWithLockedVault(
       permission.identityId,
       'string',
       withLockedVault.iv,
       withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
     method: await this.decryptWithLockedVault(
       permission.method,
       'string',
       withLockedVault.iv,
       withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
     methodPolicy: await this.decryptWithLockedVault(
       permission.methodPolicy,
       'string',
       withLockedVault.iv,
       withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
     host: await this.decryptWithLockedVault(
       permission.host,
       'string',
       withLockedVault.iv,
       withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
   };
   if (permission.kind) {
@@ -91,6 +103,8 @@ export const decryptPermission = async function (
       'number',
       withLockedVault.iv,
       withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     );
   }
   return decryptedPermission;
@@ -99,7 +113,9 @@ export const decryptPermission = async function (
 export const decryptPermissions = async function (
   this: StorageService,
   permissions: Permission_ENCRYPTED[],
-  withLockedVault: { iv: string; password: string } | undefined = undefined,
+  withLockedVault:
+    | { iv: string; password: string; kdfSalt: string; kdfIterations: number }
+    | undefined = undefined,
 ): Promise<Permission_DECRYPTED[]> {
   const decryptedPermissions: Permission_DECRYPTED[] = [];
 

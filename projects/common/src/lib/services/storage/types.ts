@@ -52,6 +52,8 @@ export interface BrowserSyncData_PART_Unencrypted {
   version: number;
   iv: string;
   vaultHash: string;
+  kdfVersion?: number;
+  kdfSalt?: string;
 }
 
 export type BrowserSyncData_PART_Encrypted = {

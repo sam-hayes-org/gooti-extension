@@ -1,24 +1,32 @@
 import { Buffer } from 'buffer';
 
+export const KDF_VERSION_CURRENT = 2;
+export const KDF_ITERATIONS_V2 = 600000;
+
+export const KDF_VERSION_LEGACY = 1;
+export const KDF_SALT_V1 = Buffer.from(
+  new TextEncoder().encode('3e7cdebd-3b4c-4125-a18c-05750cad8ec3'),
+).toString('base64');
+export const KDF_ITERATIONS_V1 = 1000;
+
 export class CryptoHelper {
-  /**
-   * Generate a base64 encoded IV.
-   */
   static generateIV(): string {
     const iv = crypto.getRandomValues(new Uint8Array(12));
     return Buffer.from(iv).toString('base64');
   }
 
-  /**
-   * Hash (SHA-256) a text string.
-   */
+  static generateSalt(): string {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    return Buffer.from(salt).toString('base64');
+  }
+
   static async hash(text: string): Promise<string> {
-    const textUint8 = new TextEncoder().encode(text); // encode as (utf-8) Uint8Array
-    const hashBuffer = await crypto.subtle.digest('SHA-256', textUint8); // hash the message
-    const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+    const textUint8 = new TextEncoder().encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', textUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray
       .map((b) => b.toString(16).padStart(2, '0'))
-      .join(''); // convert bytes to hex string
+      .join('');
     return hashHex;
   }
 
@@ -26,12 +34,16 @@ export class CryptoHelper {
     return crypto.randomUUID();
   }
 
-  static async deriveKey(password: string): Promise<CryptoKey> {
+  private static async deriveKey(
+    password: string,
+    salt: string,
+    iterations: number,
+  ): Promise<CryptoKey> {
     const algo = {
       name: 'PBKDF2',
       hash: 'SHA-256',
-      salt: new TextEncoder().encode('3e7cdebd-3b4c-4125-a18c-05750cad8ec3'),
-      iterations: 1000,
+      salt: Buffer.from(salt, 'base64'),
+      iterations,
     };
     return crypto.subtle.deriveKey(
       algo,
@@ -42,22 +54,27 @@ export class CryptoHelper {
           name: algo.name,
         },
         false,
-        ['deriveKey']
+        ['deriveKey'],
       ),
       {
         name: 'AES-GCM',
         length: 256,
       },
       false,
-      ['encrypt', 'decrypt']
+      ['encrypt', 'decrypt'],
     );
   }
 
   static async encrypt(
     text: string,
     ivBase64String: string,
-    password: string
+    password: string,
+    kdfSalt?: string,
+    kdfIterations?: number,
   ): Promise<string> {
+    const salt = kdfSalt ?? KDF_SALT_V1;
+    const iterations = kdfIterations ?? KDF_ITERATIONS_V1;
+
     const algo = {
       name: 'AES-GCM',
       length: 256,
@@ -66,8 +83,8 @@ export class CryptoHelper {
 
     const cipherText = await crypto.subtle.encrypt(
       algo,
-      await CryptoHelper.deriveKey(password),
-      new TextEncoder().encode(text)
+      await CryptoHelper.deriveKey(password, salt, iterations),
+      new TextEncoder().encode(text),
     );
     return Buffer.from(cipherText).toString('base64');
   }
@@ -75,8 +92,13 @@ export class CryptoHelper {
   static async decrypt(
     encryptedBase64String: string,
     ivBase64String: string,
-    password: string
+    password: string,
+    kdfSalt?: string,
+    kdfIterations?: number,
   ): Promise<string> {
+    const salt = kdfSalt ?? KDF_SALT_V1;
+    const iterations = kdfIterations ?? KDF_ITERATIONS_V1;
+
     const algo = {
       name: 'AES-GCM',
       length: 256,
@@ -85,9 +107,9 @@ export class CryptoHelper {
     return new TextDecoder().decode(
       await crypto.subtle.decrypt(
         algo,
-        await CryptoHelper.deriveKey(password),
-        Buffer.from(encryptedBase64String, 'base64')
-      )
+        await CryptoHelper.deriveKey(password, salt, iterations),
+        Buffer.from(encryptedBase64String, 'base64'),
+      ),
     );
   }
 }

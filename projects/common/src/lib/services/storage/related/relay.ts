@@ -12,7 +12,7 @@ export const addRelay = async function (
     url: string;
     write: boolean;
     read: boolean;
-  }
+  },
 ): Promise<void> {
   this.assureIsInitialized();
 
@@ -21,7 +21,7 @@ export const addRelay = async function (
     this.getBrowserSessionHandler().browserSessionData?.relays.find(
       (x) =>
         x.url.toLowerCase() === data.url.toLowerCase() &&
-        x.identityId === data.identityId
+        x.identityId === data.identityId,
     );
   if (existingRelay) {
     throw new Error('A relay with the same URL already exists.');
@@ -57,7 +57,7 @@ export const addRelay = async function (
 
 export const deleteRelay = async function (
   this: StorageService,
-  relayId: string
+  relayId: string,
 ): Promise<void> {
   this.assureIsInitialized();
 
@@ -72,7 +72,7 @@ export const deleteRelay = async function (
   }
 
   browserSessionData.relays = browserSessionData.relays.filter(
-    (x) => x.id !== relayId
+    (x) => x.id !== relayId,
   );
   await this.getBrowserSessionHandler().saveFullData(browserSessionData);
 
@@ -85,7 +85,7 @@ export const deleteRelay = async function (
 
 export const updateRelay = async function (
   this: StorageService,
-  relayClone: Relay_DECRYPTED
+  relayClone: Relay_DECRYPTED,
 ): Promise<void> {
   this.assureIsInitialized();
 
@@ -96,15 +96,15 @@ export const updateRelay = async function (
   }
 
   const sessionRelay = browserSessionData.relays.find(
-    (x) => x.id === relayClone.id
+    (x) => x.id === relayClone.id,
   );
   const encryptedRelayId = await this.encrypt(relayClone.id);
   const syncRelay = browserSyncData.relays.find(
-    (x) => x.id === encryptedRelayId
+    (x) => x.id === encryptedRelayId,
   );
   if (!sessionRelay || !syncRelay) {
     throw new Error(
-      'Relay not found in browser session or sync data for update.'
+      'Relay not found in browser session or sync data for update.',
     );
   }
 
@@ -126,7 +126,9 @@ export const updateRelay = async function (
 export const decryptRelay = async function (
   this: StorageService,
   relay: Relay_ENCRYPTED,
-  withLockedVault: { iv: string; password: string } | undefined = undefined
+  withLockedVault:
+    | { iv: string; password: string; kdfSalt: string; kdfIterations: number }
+    | undefined = undefined,
 ): Promise<Relay_DECRYPTED> {
   if (typeof withLockedVault === 'undefined') {
     const decryptedRelay: Relay_DECRYPTED = {
@@ -144,31 +146,41 @@ export const decryptRelay = async function (
       relay.id,
       'string',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
     identityId: await this.decryptWithLockedVault(
       relay.identityId,
       'string',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
     url: await this.decryptWithLockedVault(
       relay.url,
       'string',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
     read: await this.decryptWithLockedVault(
       relay.read,
       'boolean',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
     write: await this.decryptWithLockedVault(
       relay.write,
       'boolean',
       withLockedVault.iv,
-      withLockedVault.password
+      withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
   };
   return decryptedRelay;
@@ -177,7 +189,9 @@ export const decryptRelay = async function (
 export const decryptRelays = async function (
   this: StorageService,
   relays: Relay_ENCRYPTED[],
-  withLockedVault: { iv: string; password: string } | undefined = undefined
+  withLockedVault:
+    | { iv: string; password: string; kdfSalt: string; kdfIterations: number }
+    | undefined = undefined,
 ): Promise<Relay_DECRYPTED[]> {
   const decryptedRelays: Relay_DECRYPTED[] = [];
 
@@ -185,7 +199,7 @@ export const decryptRelays = async function (
     const decryptedRelay = await decryptRelay.call(
       this,
       relay,
-      withLockedVault
+      withLockedVault,
     );
     decryptedRelays.push(decryptedRelay);
   }
@@ -195,7 +209,7 @@ export const decryptRelays = async function (
 
 export const encryptRelay = async function (
   this: StorageService,
-  relay: Relay_DECRYPTED
+  relay: Relay_DECRYPTED,
 ): Promise<Relay_ENCRYPTED> {
   const encryptedRelay: Relay_ENCRYPTED = {
     id: await this.encrypt(relay.id),

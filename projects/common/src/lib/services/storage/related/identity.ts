@@ -256,7 +256,9 @@ export const encryptIdentity = async function (
 export const decryptIdentities = async function (
   this: StorageService,
   identities: Identity_ENCRYPTED[],
-  withLockedVault: { iv: string; password: string } | undefined = undefined,
+  withLockedVault:
+    | { iv: string; password: string; kdfSalt: string; kdfIterations: number }
+    | undefined = undefined,
 ): Promise<Identity_DECRYPTED[]> {
   const decryptedIdentities: Identity_DECRYPTED[] = [];
 
@@ -275,7 +277,9 @@ export const decryptIdentities = async function (
 export const decryptIdentity = async function (
   this: StorageService,
   identity: Identity_ENCRYPTED,
-  withLockedVault: { iv: string; password: string } | undefined = undefined,
+  withLockedVault:
+    | { iv: string; password: string; kdfSalt: string; kdfIterations: number }
+    | undefined = undefined,
 ): Promise<Identity_DECRYPTED> {
   if (typeof withLockedVault === 'undefined') {
     const decryptedIdentity: Identity_DECRYPTED = {
@@ -294,24 +298,32 @@ export const decryptIdentity = async function (
       'string',
       withLockedVault.iv,
       withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
     nick: await this.decryptWithLockedVault(
       identity.nick,
       'string',
       withLockedVault.iv,
       withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
     createdAt: await this.decryptWithLockedVault(
       identity.createdAt,
       'string',
       withLockedVault.iv,
       withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
     privkey: await this.decryptWithLockedVault(
       identity.privkey,
       'string',
       withLockedVault.iv,
       withLockedVault.password,
+      withLockedVault.kdfSalt,
+      withLockedVault.kdfIterations,
     ),
   };
 

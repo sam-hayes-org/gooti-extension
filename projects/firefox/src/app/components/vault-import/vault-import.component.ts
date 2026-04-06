@@ -55,7 +55,7 @@ export class VaultImportComponent extends NavComponent implements OnInit {
   async #loadData() {
     this.snapshots = (
       this.#storage.getGootiMetaHandler().gootiMetaData?.vaultSnapshots ?? []
-    ).sortBy((x) => x.fileName, 'desc');
+    ).sortBy((x: GootiMetaData_VaultSnapshot) => x.fileName, 'desc');
 
     const syncFlow =
       this.#storage.getGootiMetaHandler().gootiMetaData?.syncFlow;
