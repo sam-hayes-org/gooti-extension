@@ -1,0 +1,148 @@
+<p class="kicker">Sync</p>
+
+<p class="copy">
+  Sync your vault to and from your relays.
+</p>
+
+@if (phase === 'locked') {
+<p class="copy">Unlock the vault to set up sync.</p>
+}
+
+@if (phase === 'offer' || phase === 'restore' || phase === 'phrase') {
+<button type="button" class="primary" (click)="onEnable()" [disabled]="busy">
+  Create passphrase
+</button>
+}
+
+@if (phase === 'ready') {
+<button type="button" class="primary" (click)="onSync()" [disabled]="busy">
+  Sync now
+</button>
+<label class="label">Relays</label>
+<textarea class="form-control" rows="3" [value]="relays" (input)="relays = asText($event)"></textarea>
+<button type="button" class="quiet" (click)="onSaveRelays(toast)" [disabled]="busy">
+  Save relays
+</button>
+<label class="copy check">
+  <input type="checkbox" [checked]="autoSync" (change)="onAutoSync($event)" [disabled]="busy" />
+  Sync automatically
+</label>
+@if (autoSync) {
+<p class="copy">
+  Gooti syncs when you open it and after a change on this browser. Sync now does the same at once.
+</p>
+} @else {
+<p class="copy">
+  Sync runs when you press Sync now.
+</p>
+}
+}
+
+@if (error && phase !== 'restore' && phase !== 'phrase') {
+<span class="text-danger">{{ error }}</span>
+}
+
+<lib-toast #toast></lib-toast>
+
+<div [id]="phraseDialogId" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create passphrase</h5>
+        <button type="button" class="btn-close" (click)="onDiscardPhrase()"></button>
+      </div>
+      <div class="modal-body sam-flex-column gap-h">
+        <p class="copy">
+          Write these 12 words down. They stay here until you apply or cancel.
+        </p>
+        <div class="phrase-line">
+          <span class="phrase">{{ leave.phrase }}</span>
+          <lib-icon-button icon="copy" (click)="copyPhrase(); toast.show('Copied to clipboard')"></lib-icon-button>
+        </div>
+        <label class="copy">
+          <input type="checkbox" [checked]="savedWords" (change)="onSavedWords($event)" />
+          I have saved these words
+        </label>
+        @if (error) {
+        <span class="text-danger">{{ error }}</span>
+        }
+      </div>
+      <div class="modal-footer">
+        <div class="pair">
+          <button type="button" class="primary" (click)="onSavePhrase(toast)" [disabled]="busy || !savedWords">
+            Apply
+          </button>
+          <button type="button" class="quiet" (click)="onDiscardPhrase()" [disabled]="busy">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div [id]="restoreDialogId" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Restore vault</h5>
+        <button type="button" class="btn-close" (click)="onCancelRestore()"></button>
+      </div>
+      <div class="modal-body sam-flex-column gap-h">
+        <label class="label">Relays</label>
+        <textarea class="form-control" rows="3" [value]="relays" (input)="relays = asText($event)"></textarea>
+        <textarea class="form-control" rows="3" [value]="phraseInput" (input)="phraseInput = asText($event)"
+          placeholder="12 words"></textarea>
+        @if (error) {
+        <span class="text-danger">{{ error }}</span>
+        }
+      </div>
+      <div class="modal-footer">
+        <div class="pair">
+          <button type="button" class="primary" (click)="onRestore(toast)" [disabled]="busy">
+            Restore vault
+          </button>
+          <button type="button" class="quiet" (click)="onCancelRestore()" [disabled]="busy">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div [id]="syncDialogId" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Sync</h5>
+      </div>
+      <div class="modal-body sam-flex-column gap-h">
+        @for (line of syncLines; track $index) {
+        <div class="sync-step">
+          @if (line.active) {
+          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          } @else {
+          <i class="bi bi-check"></i>
+          }
+          <span>{{ line.text }}</span>
+        </div>
+        }
+        @if (syncError) {
+        <span class="text-danger">{{ syncError }}</span>
+        @for (failure of syncFailures; track $index) {
+        <p class="relay-failure">
+          <span class="url">{{ failure.url }}</span>
+          <span class="reason">{{ failure.reason }}</span>
+        </p>
+        }
+        }
+      </div>
+      @if (syncDone) {
+      <div class="modal-footer">
+        <button type="button" class="action primary" (click)="closeSync()">Close</button>
+      </div>
+      }
+    </div>
+  </div>
+</div>

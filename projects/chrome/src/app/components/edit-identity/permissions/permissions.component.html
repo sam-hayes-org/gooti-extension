@@ -1,30 +1,34 @@
-<div class="header-pane">
-  <lib-icon-button icon="chevron-left" (click)="navigateBack()"></lib-icon-button>
-  <span>Permissions</span>
-</div>
+<p class="kicker">Permissions</p>
 
 @if(hostsPermissions.length === 0) {
-<span class="text-muted" style="font-size: 12px">
-  Nothing configured so far.
-</span>
-} @for(hostPermissions of hostsPermissions; track hostPermissions) {
+<p class="empty">Nothing configured so far.</p>
+} @for(hostPermissions of hostsPermissions; track hostPermissions.host) {
 <div class="permissions-card">
-  <span style="margin-bottom: 4px; font-weight: 500">
-    {{ hostPermissions.host }}
-  </span>
+  <div class="card-head">
+    <span class="host">{{ hostPermissions.host }}</span>
+    <button
+      type="button"
+      class="clear"
+      (click)="onClickClearHost(hostPermissions.host, confirm)"
+    >
+      Clear all
+    </button>
+  </div>
 
-  @for(permission of hostPermissions.permissions; track permission) {
+  @for(permission of hostPermissions.permissions; track permission.id) {
   <div class="permission">
     <span
+      class="policy"
       [class.action-allow]="permission.methodPolicy === 'allow'"
       [class.action-deny]="permission.methodPolicy === 'deny'"
       >{{ permission.methodPolicy }}</span
     >
-    <span class="text-muted">{{ permission.method }}</span>
-    @if(typeof permission.kind !== 'undefined') {
-    <span>(kind {{ permission.kind }})</span>
-    }
-    <div class="sam-flex-grow"></div>
+    <span class="method">{{ permission.method }}</span>
+    <span class="kind">
+      @if (typeof permission.kind !== 'undefined') {
+        kind {{ permission.kind }}
+      }
+    </span>
     <lib-icon-button
       icon="trash"
       title="Revoke permission"
@@ -33,5 +37,5 @@
   </div>
   }
 </div>
-
 }
+<lib-confirm #confirm></lib-confirm>

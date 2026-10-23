@@ -3,15 +3,17 @@ import {
   BackgroundCommon,
   BrowserSessionData,
   BrowserSyncData,
-  BrowserSyncFlow,
-  GootiMetaData,
+  GOOTI_META_PROPERTIES,
   Identity_DECRYPTED,
   Nip07Method,
   Nip07MethodPolicy,
   Permission_DECRYPTED,
   Permission_ENCRYPTED,
+  recordHasVault,
+  fitPopupBounds,
+  WindowRect,
 } from '@common';
-import { FirefoxMetaHandler } from './app/common/data/firefox-meta-handler';
+import { FirefoxVaultHandler } from './app/common/data/firefox-vault-handler';
 import browser from 'webextension-polyfill';
 
 export class FirefoxBackgroundCommon extends BackgroundCommon {
@@ -25,42 +27,28 @@ export class FirefoxBackgroundCommon extends BackgroundCommon {
   }
 
   async getBrowserSyncData(): Promise<BrowserSyncData | undefined> {
-    const gootiMetaHandler = new FirefoxMetaHandler();
-    const gootiMetaData =
-      (await gootiMetaHandler.loadFullData()) as GootiMetaData;
+    await new FirefoxVaultHandler().retireAccountSync();
 
-    let browserSyncData: BrowserSyncData | undefined;
-
-    if (gootiMetaData.syncFlow === BrowserSyncFlow.NO_SYNC) {
-      browserSyncData = (await browser.storage.local.get(
-        null,
-      )) as unknown as BrowserSyncData;
-    } else if (gootiMetaData.syncFlow === BrowserSyncFlow.BROWSER_SYNC) {
-      browserSyncData = (await browser.storage.sync.get(
-        null,
-      )) as unknown as BrowserSyncData;
+    const data = await browser.storage.local.get(null);
+    for (const key of GOOTI_META_PROPERTIES) {
+      delete data[key];
     }
 
-    return browserSyncData;
+    if (!recordHasVault(data)) {
+      return undefined;
+    }
+
+    return data as unknown as BrowserSyncData;
   }
 
   async savePermissionsToBrowserSyncStorage(
     newPermissions: string[],
     newPermission: Permission_ENCRYPTED,
   ): Promise<void> {
-    const gootiMetaHandler = new FirefoxMetaHandler();
-    const gootiMetaData =
-      (await gootiMetaHandler.loadFullData()) as GootiMetaData;
-
     const data: Record<string, any> = {};
     data['permissions'] = newPermissions;
     data[`permission_${newPermission.id}`] = newPermission;
-
-    if (gootiMetaData.syncFlow === BrowserSyncFlow.NO_SYNC) {
-      await browser.storage.local.set(data);
-    } else if (gootiMetaData.syncFlow === BrowserSyncFlow.BROWSER_SYNC) {
-      await browser.storage.sync.set(data);
-    }
+    await browser.storage.local.set(data);
   }
 
   async storePermission(
@@ -85,30 +73,49 @@ export class FirefoxBackgroundCommon extends BackgroundCommon {
       kind,
     };
 
-    // Store session data
+    // Keep the id on this object so the next permission on the same card is kept.
+    browserSessionData.permissions = [
+      ...browserSessionData.permissions,
+      permission.id,
+    ];
     await browser.storage.session.set({
-      permissions: [...browserSessionData.permissions, permission.id],
+      permissions: browserSessionData.permissions,
     });
     await browser.storage.session.set({
       [`permission_${permission.id}`]: permission,
     });
 
-    // Encrypt permission to store in sync storage (depending on sync flow).
+    if (!browserSessionData.salt || !browserSessionData.vaultPassword) {
+      throw new Error('Vault key material is missing.');
+    }
     const encryptedPermission = await this.encryptPermission(
       permission,
-      browserSessionData.iv,
-      browserSessionData.vaultPassword as string,
+      browserSessionData.vaultPassword,
+      browserSessionData.salt,
     );
 
     await this.savePermissionsToBrowserSyncStorage(
       [...browserSyncData.permissions, encryptedPermission.id],
       encryptedPermission,
     );
+
+    const sealedSync = await this.stampStoredPermission(browserSessionData, identity, {
+      host,
+      method,
+      methodPolicy,
+      kind,
+    });
+    if (sealedSync) {
+      await browser.storage.session.set({ nostrSync: browserSessionData.nostrSync });
+      await browser.storage.local.set({ nostrSync: sealedSync });
+      if (browserSessionData.nostrSync?.autoSync) {
+        this.scheduleQuietSync();
+      }
+    }
   }
 
   async getPosition(width: number, height: number) {
-    let left = 0;
-    let top = 0;
+    let anchor: WindowRect | undefined;
 
     try {
       const lastFocused = await browser.windows.getLastFocused();
@@ -120,9 +127,12 @@ export class FirefoxBackgroundCommon extends BackgroundCommon {
         lastFocused.width !== undefined &&
         lastFocused.height !== undefined
       ) {
-        // Position window in the center of the lastFocused window
-        top = Math.round(lastFocused.top + (lastFocused.height - height) / 2);
-        left = Math.round(lastFocused.left + (lastFocused.width - width) / 2);
+        anchor = {
+          left: lastFocused.left,
+          top: lastFocused.top,
+          width: lastFocused.width,
+          height: lastFocused.height,
+        };
       } else {
         console.error('Last focused window properties are undefined.');
       }
@@ -130,9 +140,6 @@ export class FirefoxBackgroundCommon extends BackgroundCommon {
       console.error('Error getting window position:', error);
     }
 
-    return {
-      top,
-      left,
-    };
+    return fitPopupBounds(width, height, anchor, []);
   }
 }

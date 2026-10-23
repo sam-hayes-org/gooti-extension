@@ -1,49 +1,48 @@
-<div class="sam-text-header">
-  <span>Gooti</span>
-</div>
+<div class="decision">
+  <div class="brand">
+    <img src="gooti.svg" width="18" height="18" alt="" />
+    <span>Gooti</span>
+  </div>
 
-<div class="content">
-  <div class="sam-flex-column gap" style="align-items: center">
-    <div class="logo-frame">
-      <img src="gooti.svg" height="120" width="120" alt="" />
-    </div>
+  <div class="body">
+    <h1>Choose a password</h1>
+    <p class="hint">Sensitive data is encrypted before it is stored.</p>
 
-    <span class="sam-mt-2"> Please define a password for your vault. </span>
+    <form (submit)="$event.preventDefault(); createVault(passwordInputElement.value)">
+      <div class="field">
+        <input
+          #passwordInputElement
+          type="password"
+          placeholder="Vault password"
+          aria-label="Vault password"
+          [(ngModel)]="password"
+          name="password"
+        />
+        <button
+          type="button"
+          class="eye"
+          [attr.aria-label]="
+            passwordInputElement.type === 'password' ? 'Show password' : 'Hide password'
+          "
+          (click)="toggleType(passwordInputElement)"
+        >
+          <i
+            class="bi"
+            [class.bi-eye]="passwordInputElement.type === 'password'"
+            [class.bi-eye-slash]="passwordInputElement.type === 'text'"
+          ></i>
+        </button>
+      </div>
 
-    <small class="sam-text-muted">
-      Sensitive data is encypted before it is stored.
-    </small>
-
-    <div class="sam-mt input-group">
-      <input
-        #passwordInputElement
-        type="password"
-        class="form-control form-control-lg"
-        style="font-size: 1rem"
-        placeholder="vault password"
-        [(ngModel)]="password"
-        (keydown.enter)="createVault(passwordInputElement.value)"
-      />
       <button
-        class="btn btn-outline-secondary"
-        type="button"
-        (click)="toggleType(passwordInputElement)"
+        class="submit"
+        type="submit"
+        [disabled]="!password || password.length < minPasswordLength"
       >
-        <i
-          class="bi bi-eye"
-          [class.bi-eye]="passwordInputElement.type === 'password'"
-          [class.bi-eye-slash]="passwordInputElement.type === 'text'"
-        ></i>
+        Create vault
       </button>
-    </div>
+    </form>
 
-    <button
-      [disabled]="!password || password.length < minPasswordLength"
-      type="button"
-      class="sam-mt btn btn-primary"
-      (click)="createVault(password)"
-    >
-      Create vault
-    </button>
+    <button type="button" class="quiet" (click)="navigate('/vault-create/home')">Back</button>
   </div>
 </div>

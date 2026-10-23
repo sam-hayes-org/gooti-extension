@@ -1,11 +1,6 @@
 <lib-nav-item text="Keys" (click)="onClickNavigateTo('keys')"></lib-nav-item>
 
 <lib-nav-item
-  text="Relays"
-  (click)="onClickNavigateTo('relays')"
-></lib-nav-item>
-
-<lib-nav-item
   text="Permissions"
   (click)="onClickNavigateTo('permissions')"
 ></lib-nav-item>
@@ -14,7 +9,7 @@
 
 <button
   type="button"
-  class="btn btn-danger"
+  class="action danger"
   (click)="
     confirm.show(
       'Do you really want to delete this identity?',

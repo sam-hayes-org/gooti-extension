@@ -1,4 +1,10 @@
-import { AfterViewInit, Component, HostBinding, Input } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  HostBinding,
+  Input,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import * as bootstrap from 'bootstrap';
 
 @Component({
@@ -6,6 +12,7 @@ import * as bootstrap from 'bootstrap';
   selector: 'lib-toast',
   imports: [],
   templateUrl: './toast.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './toast.component.scss',
 })
 export class ToastComponent implements AfterViewInit {

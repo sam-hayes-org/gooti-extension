@@ -1,9 +1,10 @@
 import { Routes } from '@angular/router';
 import { HomeComponent as VaultCreateHomeComponent } from './components/vault-create/home/home.component';
 import { NewComponent as VaultCreateNewComponent } from './components/vault-create/new/new.component';
+import { RestoreComponent as VaultCreateRestoreComponent } from './components/vault-create/restore/restore.component';
 import { HomeComponent } from './components/home/home.component';
+import { ActivityComponent } from '@common';
 import { IdentitiesComponent } from './components/home/identities/identities.component';
-import { IdentityComponent } from './components/home/identity/identity.component';
 import { InfoComponent } from './components/home/info/info.component';
 import { SettingsComponent } from './components/home/settings/settings.component';
 import { NewIdentityComponent } from './components/new-identity/new-identity.component';
@@ -11,17 +12,12 @@ import { EditIdentityComponent } from './components/edit-identity/edit-identity.
 import { HomeComponent as EditIdentityHomeComponent } from './components/edit-identity/home/home.component';
 import { KeysComponent as EditIdentityKeysComponent } from './components/edit-identity/keys/keys.component';
 import { PermissionsComponent as EditIdentityPermissionsComponent } from './components/edit-identity/permissions/permissions.component';
-import { RelaysComponent as EditIdentityRelaysComponent } from './components/edit-identity/relays/relays.component';
-import { WelcomeComponent } from './components/welcome/welcome.component';
 import { VaultLoginComponent } from './components/vault-login/vault-login.component';
 import { VaultCreateComponent } from './components/vault-create/vault-create.component';
 import { VaultImportComponent } from './components/vault-import/vault-import.component';
+import { ChooseIdentityComponent } from './components/choose-identity/choose-identity.component';
 
 export const routes: Routes = [
-  {
-    path: 'welcome',
-    component: WelcomeComponent,
-  },
   {
     path: 'vault-login',
     component: VaultLoginComponent,
@@ -38,11 +34,19 @@ export const routes: Routes = [
         path: 'new',
         component: VaultCreateNewComponent,
       },
+      {
+        path: 'restore',
+        component: VaultCreateRestoreComponent,
+      },
     ],
   },
   {
     path: 'vault-import',
     component: VaultImportComponent,
+  },
+  {
+    path: 'choose-identity',
+    component: ChooseIdentityComponent,
   },
   {
     path: 'home',
@@ -54,7 +58,12 @@ export const routes: Routes = [
       },
       {
         path: 'identity',
-        component: IdentityComponent,
+        redirectTo: 'identities',
+        pathMatch: 'full',
+      },
+      {
+        path: 'activity',
+        component: ActivityComponent,
       },
       {
         path: 'info',
@@ -85,10 +94,6 @@ export const routes: Routes = [
       {
         path: 'permissions',
         component: EditIdentityPermissionsComponent,
-      },
-      {
-        path: 'relays',
-        component: EditIdentityRelaysComponent,
       },
     ],
   },

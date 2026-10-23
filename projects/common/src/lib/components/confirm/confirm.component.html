@@ -5,7 +5,7 @@
   >
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Please confirm</h5>
+        <h5 class="modal-title">{{ title }}</h5>
         <button
           type="button"
           class="btn-close"
@@ -16,11 +16,13 @@
         <span>{{ message }}</span>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="modal?.hide()">
-          No
-        </button>
-        <button type="button" class="btn btn-primary" (click)="onClickYes()">
-          Yes
+        @if (showNo) {
+          <button type="button" class="action quiet" (click)="modal?.hide()">
+            No
+          </button>
+        }
+        <button type="button" class="action primary" (click)="onClickYes()">
+          {{ yesLabel }}
         </button>
       </div>
     </div>

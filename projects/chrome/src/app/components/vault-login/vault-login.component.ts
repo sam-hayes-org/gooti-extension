@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ConfirmComponent, StartupService, StorageService } from '@common';
@@ -8,6 +8,7 @@ import { getNewStorageServiceConfig } from '../../common/data/get-new-storage-se
   selector: 'app-vault-login',
   templateUrl: './vault-login.component.html',
   styleUrl: './vault-login.component.scss',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [FormsModule, ConfirmComponent],
 })
 export class VaultLoginComponent {
@@ -17,6 +18,15 @@ export class VaultLoginComponent {
   readonly #storage = inject(StorageService);
   readonly #router = inject(Router);
   readonly #startup = inject(StartupService);
+
+  get fromBackground(): boolean {
+    return this.#startup.startupDetails.source === 'background';
+  }
+
+  /** Site that opened this window. The toolbar unlock has none. */
+  get siteHost(): string | null {
+    return this.fromBackground ? (this.#startup.startupDetails.host ?? null) : null;
+  }
 
   toggleType(element: HTMLInputElement) {
     if (element.type === 'password') {
@@ -33,7 +43,14 @@ export class VaultLoginComponent {
 
     try {
       await this.#storage.unlockVault(password ?? this.loginPassword);
-      this.#router.navigateByUrl('/home/identities');
+      if (this.#startup.startupDetails.source !== 'background') {
+        this.#storage.queueQuietSync();
+      }
+      const next =
+        this.#startup.startupDetails.source === 'background'
+          ? '/choose-identity'
+          : '/home/identities';
+      this.#router.navigateByUrl(next);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       this.showInvalidPasswordAlert = true;

@@ -1,0 +1,42 @@
+<div class="header">
+  <span>Activity</span>
+</div>
+
+@if (entries.length === 0) {
+  <p class="empty">Nothing has happened yet.</p>
+} @else {
+  @for (entry of entries; track $index) {
+    <article class="row">
+      @if (isSync(entry)) {
+        <div class="top">
+          <span class="host">Sync</span>
+          <span class="time">{{ time(entry.at) }}</span>
+        </div>
+        <div class="bottom">
+          <span class="detail">{{ syncModeLabel[entry.sync] }}</span>
+          <span [class]="'outcome ' + entry.result">{{ syncResultLabel[entry.result] }}</span>
+        </div>
+        @if (entry.reason) {
+          <p class="reason">{{ entry.reason }}</p>
+        }
+      } @else {
+        <div class="top">
+          <span class="host">{{ entry.host }}</span>
+          <span class="time">{{ time(entry.at) }}</span>
+        </div>
+        <div class="bottom">
+          <span class="detail">
+            @if (entry.identity) {
+              {{ entry.identity }} ·
+            }
+            {{ entry.method }}
+            @if (entry.kind !== undefined) {
+              · kind {{ entry.kind }}
+            }
+          </span>
+          <span [class]="'outcome ' + entry.outcome">{{ outcomeLabel[entry.outcome] }}</span>
+        </div>
+      }
+    </article>
+  }
+}

@@ -6,259 +6,328 @@
     <link rel="stylesheet" type="text/css" href="styles.css" />
     <script src="scripts.js"></script>
     <style>
+      html,
       body {
-        background: var(--background);
-        height: 100vh;
-        width: 100vw;
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        background: #0c1016;
         color: #ffffff;
         font-size: 16px;
       }
 
-      .color-primary {
+      .stage {
+        min-height: 100%;
+        display: flex;
+        justify-content: center;
+      }
+
+      .decision {
+        width: min(440px, 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 22px 22px 18px;
+        background: var(--background);
+        box-sizing: border-box;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #9aa3b2;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .brand svg {
+        width: 18px;
+        height: 18px;
+        flex: none;
+      }
+
+      .body {
+        flex: 0 1 auto;
+        min-height: 0;
+        max-height: calc(100vh - 160px);
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        padding: 28px 2px 8px;
+      }
+
+      .host {
+        margin: 0;
+        color: #9aa3b2;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      h1 {
+        margin: 6px 0 0;
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+      }
+
+      h1.danger {
+        color: var(--bs-danger);
+      }
+
+      .request {
+        margin-top: 16px;
+      }
+
+      .card-lines {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .card-line {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .card-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .card-kicker {
+        color: #9aa3b2;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .card-event-id {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+        letter-spacing: 0.01em;
+        color: #e8edf5;
+      }
+
+      .card-field .card-line-detail {
+        margin-top: 0;
+      }
+
+      .card-lines.single .card-line-headline {
+        display: none;
+      }
+
+      .card-lines.single:not(:has(.card-line-detail)) {
+        display: none;
+      }
+
+      .card-line-headline {
+        font-size: 15px;
+        font-weight: 600;
+        color: #e8edf5;
+        overflow-wrap: anywhere;
+      }
+
+      .card-line-headline.danger {
+        color: var(--bs-danger);
+      }
+
+      .card-line-detail {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        overflow-y: auto;
+        max-height: 11rem;
+        margin-top: 8px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: var(--background-light);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 16px;
+        line-height: 1.45;
+      }
+
+      .card-lines.single .card-line-detail {
+        margin-top: 0;
+      }
+
+      .note {
+        margin: 14px 0 0;
+        color: #9aa3b2;
+        font-size: 13px;
+      }
+
+      .signer {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 22px;
+        padding: 12px;
+        border-radius: 12px;
+        background: var(--background-light);
+      }
+
+      .stripe {
+        width: 4px;
+        align-self: stretch;
+        border-radius: 4px;
+        background: var(--primary);
+      }
+
+      .avatar {
+        width: 36px;
+        height: 36px;
+        flex: none;
+        display: grid;
+        place-items: center;
+      }
+
+      .avatar svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      .letter {
+        font-size: 16px;
+        font-weight: 600;
         color: var(--primary);
       }
 
-      .page {
-        height: 100%;
-        display: grid;
-        grid-template-rows: 1fr 60px;
-        grid-template-columns: 1fr;
-        overflow-y: hidden;
+      .signer-kicker {
+        color: #9aa3b2;
+        font-size: 12px;
       }
 
-      .card {
-        padding: var(--size);
-        background: var(--background-light);
-        border-radius: 8px;
-        color: #ffffff;
+      .signer-nick {
+        font-size: 16px;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 28px;
+      }
+
+      .action {
         display: flex;
         flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
       }
 
-      .json {
-        white-space: pre;
-        overflow-y: auto;
-        font-size: 12px;
-        color: gray;
+      .choice,
+      .once {
+        border: 0;
+        cursor: pointer;
+        font: inherit;
       }
 
-      .text {
-        white-space: normal;
-        overflow-y: auto;
-        font-size: 12px;
-        color: gray;
+      .choice {
+        height: 44px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .choice:disabled,
+      .once:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      .reject {
+        background: #2a3140;
+        color: #ffffff;
+      }
+
+      .reject:hover:not(:disabled) {
+        background: #343c4e;
+      }
+
+      .approve {
+        background: var(--primary);
+        color: #ffffff;
+      }
+
+      .approve:hover:not(:disabled) {
+        filter: brightness(1.08);
+      }
+
+      .once {
+        background: transparent;
+        color: #9aa3b2;
+        font-size: 13px;
+        padding: 6px 4px;
+      }
+
+      .once:hover:not(:disabled) {
+        color: #ffffff;
       }
     </style>
   </head>
   <body>
-    <div class="page">
-      <div class="sam-flex-column" style="overflow-y: auto">
-        <div class="sam-text-header">
-          <span id="titleSpan" style="font-weight: 400 !important"></span>
+    <div class="stage">
+      <div class="decision">
+        <div class="brand">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#ffffff" d="M4.66378 6.62012 0.751282 10.9774H6.11588l0.5042 7.3802 11.73752 4.8911L9.55488 9.01202l-4.8911 -2.3919Z"></path>
+            <path fill="#ffffff" d="M18.8423 0.751343 9.55499 9.01194l5.32571 8.61246L18.8423 0.751343Z"></path>
+            <path fill="#bbd8ff" d="m9.555 9.01187 -1.4675 -0.7178 -1.7681 5.66933 0.3007 4.3942L9.555 9.01187Z"></path>
+            <path fill="#bbd8ff" d="m4.66378 6.62012 1.4521 4.35728H0.751282L4.66378 6.62012Z"></path>
+            <path fill="#bbd8ff" d="m15.3767 18.4282 7.872 -15.23167 -5.5814 2.5565 -2.7866 11.87137 0.496 0.8038Z"></path>
+            <path stroke="#0d6efd" stroke-linejoin="round" stroke-miterlimit="10" d="m9.55488 9.01202 -4.8911 -2.3919L0.751282 10.9774H6.11588l0.5042 7.3802 11.73752 4.8911L9.55488 9.01202Z" stroke-width="1"></path>
+            <path stroke="#0d6efd" stroke-linejoin="round" stroke-miterlimit="10" d="M9.55499 9.01194 18.8423 0.751343 14.8807 17.6244" stroke-width="1"></path>
+            <path stroke="#0d6efd" stroke-linejoin="round" stroke-miterlimit="10" d="m17.6673 5.75303 5.5814 -2.5565 -7.872 15.23167" stroke-width="1"></path>
+            <path stroke="#0d6efd" stroke-linejoin="round" stroke-miterlimit="10" d="m4.66382 6.62012 1.4521 4.35728" stroke-width="1"></path>
+            <path stroke="#0d6efd" stroke-linejoin="round" stroke-miterlimit="10" d="m6.62109 18.3564 2.9338 -9.34456" stroke-width="1"></path>
+          </svg>
+          <span>Gooti</span>
         </div>
 
-        <span
-          class="host-INSERT sam-align-self-center sam-text-muted"
-          style="font-weight: 500"
-        ></span>
+        <div class="body">
+          <p class="host host-INSERT"></p>
+          <h1 id="titleSpan"></h1>
 
-        <!-- Card for getPublicKey -->
-        <div id="cardGetPublicKey" class="card sam-mt sam-ml sam-mr">
-          <span style="text-align: center">
-            <b><span class="host-INSERT color-primary"></span></b>
-            is requesting permission to<br />
-            <br />
-            <b class="color-primary">read your public key</b> <br />
-            <br />
-            <span>
-              for the selected identity
-              <span
-                style="font-weight: 500"
-                class="nick-INSERT color-primary"
-              ></span>
-            </span>
-          </span>
+          <div id="cardGetPublicKey" class="request" hidden></div>
+
+          <div id="cardBunkerAsk" class="request" hidden></div>
+
+          <div id="cardConsequence" class="request" hidden>
+            <div id="cardLines" class="card-lines"></div>
+          </div>
+
+          <p id="bunkerNote" class="note" hidden>The phone still approves it.</p>
+
+          <div class="signer">
+            <span class="stripe" id="stripe"></span>
+            <div class="avatar" id="avatar" aria-hidden="true"></div>
+            <div>
+              <div class="signer-kicker">Site identity</div>
+              <div class="signer-nick nick-INSERT"></div>
+            </div>
+          </div>
         </div>
 
-        <!-- Card for getRelays -->
-        <div id="cardGetRelays" class="card sam-mt sam-ml sam-mr">
-          <span style="text-align: center">
-            <b><span class="host-INSERT color-primary"></span></b>
-            is requesting permission to<br />
-            <br />
-            <b class="color-primary">read your relays</b> <br />
-            <br />
-            <span>
-              for the selected identity
-              <span
-                style="font-weight: 500"
-                class="nick-INSERT color-primary"
-              ></span>
-            </span>
-          </span>
-        </div>
-
-        <!-- Card for signEvent -->
-        <div id="cardSignEvent" class="card sam-mt sam-ml sam-mr">
-          <span style="text-align: center">
-            <b><span class="host-INSERT color-primary"></span></b>
-            is requesting permission to<br />
-            <br />
-            <b class="color-primary">sign an event</b> (kind
-            <span id="kindSpan"></span>) <br />
-            <br />
-            <span>
-              for the selected identity
-              <span
-                style="font-weight: 500"
-                class="nick-INSERT color-primary"
-              ></span>
-            </span>
-          </span>
-        </div>
-
-        <!-- Card2 for signEvent -->
-        <div id="card2SignEvent" class="card sam-mt sam-ml sam-mr">
-          <div id="card2SignEvent_json" class="json"></div>
-        </div>
-
-        <!-- Card for nip04.encrypt -->
-        <div id="cardNip04Encrypt" class="card sam-mt sam-ml sam-mr">
-          <span style="text-align: center">
-            <b><span class="host-INSERT color-primary"></span></b>
-            is requesting permission to<br />
-            <br />
-            <b class="color-primary">encrypt a text</b> (NIP04) <br />
-            <br />
-            <span>
-              for the selected identity
-              <span
-                style="font-weight: 500"
-                class="nick-INSERT color-primary"
-              ></span>
-            </span>
-          </span>
-        </div>
-
-        <!-- Card2 for nip04.encrypt -->
-        <div id="card2Nip04Encrypt" class="card sam-mt sam-ml sam-mr">
-          <div id="card2Nip04Encrypt_text" class="text"></div>
-        </div>
-
-        <!-- Card for nip44.encrypt -->
-        <div id="cardNip44Encrypt" class="card sam-mt sam-ml sam-mr">
-          <span style="text-align: center">
-            <b><span class="host-INSERT color-primary"></span></b>
-            is requesting permission to<br />
-            <br />
-            <b class="color-primary">encrypt a text</b> (NIP44) <br />
-            <br />
-            <span>
-              for the selected identity
-              <span
-                style="font-weight: 500"
-                class="nick-INSERT color-primary"
-              ></span>
-            </span>
-          </span>
-        </div>
-
-        <!-- Card2 for nip44.encrypt -->
-        <div id="card2Nip44Encrypt" class="card sam-mt sam-ml sam-mr">
-          <div id="card2Nip44Encrypt_text" class="text"></div>
-        </div>
-
-        <!-- Card for nip04.decrypt -->
-        <div id="cardNip04Decrypt" class="card sam-mt sam-ml sam-mr">
-          <span style="text-align: center">
-            <b><span class="host-INSERT color-primary"></span></b>
-            is requesting permission to<br />
-            <br />
-            <b class="color-primary">decrypt a text</b> (NIP04) <br />
-            <br />
-            <span>
-              for the selected identity
-              <span
-                style="font-weight: 500"
-                class="nick-INSERT color-primary"
-              ></span>
-            </span>
-          </span>
-        </div>
-
-        <!-- Card2 for nip04.decrypt -->
-        <div id="card2Nip04Decrypt" class="card sam-mt sam-ml sam-mr">
-          <div id="card2Nip04Decrypt_text" class="text"></div>
-        </div>
-
-        <!-- Card for nip44.decrypt -->
-        <div id="cardNip44Decrypt" class="card sam-mt sam-ml sam-mr">
-          <span style="text-align: center">
-            <b><span class="host-INSERT color-primary"></span></b>
-            is requesting permission to<br />
-            <br />
-            <b class="color-primary">decrypt a text</b> (NIP44) <br />
-            <br />
-            <span>
-              for the selected identity
-              <span
-                style="font-weight: 500"
-                class="nick-INSERT color-primary"
-              ></span>
-            </span>
-          </span>
-        </div>
-
-        <!-- Card2 for nip44.decrypt -->
-        <div id="card2Nip44Decrypt" class="card sam-mt sam-ml sam-mr">
-          <div id="card2Nip44Decrypt_text" class="text"></div>
-        </div>
-      </div>
-
-      <!------------->
-      <!-- ACTIONS -->
-      <!------------->
-      <div class="sam-footer-grid-2">
-        <div class="btn-group">
-          <button id="rejectButton" type="button" class="btn btn-secondary">
-            Reject
-          </button>
-          <button
-            type="button"
-            class="btn btn-secondary dropdown-toggle dropdown-toggle-split"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            <span class="visually-hidden">Toggle Dropdown</span>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <button id="rejectJustOnceButton" class="dropdown-item">
-                just once
-              </button>
-            </li>
-          </ul>
-        </div>
-
-        <div class="btn-group">
-          <button id="approveButton" type="button" class="btn btn-primary">
-            Approve
-          </button>
-          <button
-            type="button"
-            class="btn btn-primary dropdown-toggle dropdown-toggle-split"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            <span class="visually-hidden">Toggle Dropdown</span>
-          </button>
-          <ul class="dropdown-menu">
-            <li>
-              <button id="approveJustOnceButton" class="dropdown-item" href="#">
-                just once
-              </button>
-            </li>
-          </ul>
+        <div class="actions">
+          <div class="action">
+            <button id="rejectButton" type="button" class="choice reject">Reject</button>
+            <button id="rejectJustOnceButton" type="button" class="once">Only this time</button>
+          </div>
+          <div class="action">
+            <button id="approveButton" type="button" class="choice approve">Approve</button>
+            <button id="approveJustOnceButton" type="button" class="once">Only this time</button>
+          </div>
         </div>
       </div>
     </div>

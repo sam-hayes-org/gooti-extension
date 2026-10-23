@@ -1,12 +1,12 @@
 {
   "name": "gooti-extension",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "custom": {
     "chrome": {
-      "version": "1.0.0"
+      "version": "2.0.0"
     },
     "firefox": {
-      "version": "1.0.0"
+      "version": "2.0.0"
     }
   },
   "scripts": {
@@ -26,16 +26,17 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^21.0.6",
-    "@angular/common": "^21.0.6",
-    "@angular/compiler": "^21.0.6",
-    "@angular/core": "^21.0.6",
-    "@angular/forms": "^21.0.6",
-    "@angular/platform-browser": "^21.0.6",
-    "@angular/platform-browser-dynamic": "^21.0.6",
-    "@angular/router": "^21.0.6",
+    "@angular/animations": "^22.2.3",
+    "@angular/common": "^22.2.3",
+    "@angular/compiler": "^22.2.3",
+    "@angular/core": "^22.2.3",
+    "@angular/forms": "^22.2.3",
+    "@angular/platform-browser": "^22.2.3",
+    "@angular/platform-browser-dynamic": "^22.2.3",
+    "@angular/router": "^22.2.3",
     "@nostr-dev-kit/ndk": "^2.18.1",
     "@popperjs/core": "^2.11.8",
+    "@scure/bip39": "^1.2.1",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
     "buffer": "^6.0.3",
@@ -46,26 +47,27 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
-    "@angular-builders/custom-webpack": "^21.0.0-beta.1",
-    "@angular-devkit/build-angular": "^21.0.4",
-    "@angular/cli": "^21.0.4",
-    "@angular/compiler-cli": "^21.0.6",
+    "@angular-builders/custom-webpack": "^22.0.1",
+    "@angular-devkit/build-angular": "^22.2.4",
+    "@angular/cli": "^22.2.4",
+    "@angular/compiler-cli": "^22.2.3",
     "@types/bootstrap": "^5.2.10",
     "@types/chrome": "^0.0.293",
     "@types/jasmine": "~5.1.0",
     "@types/webextension-polyfill": "^0.12.1",
-    "angular-eslint": "21.1.0",
+    "angular-eslint": "^22.6.0",
     "eslint": "^9.16.0",
+    "istanbul-lib-instrument": "^6.0.3",
     "jasmine-core": "~5.4.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "ng-packagr": "^21.0.1",
+    "ng-packagr": "^22.2.5",
     "prettier": "^3.7.4",
     "rimraf": "^6.1.2",
-    "typescript": "~5.9.3",
-    "typescript-eslint": "8.51.0"
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.0"
   }
 }
