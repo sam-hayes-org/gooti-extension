@@ -1,8 +1,9 @@
-<div>
+<div class="view">
   <router-outlet></router-outlet>
 </div>
+<lib-backup-notice></lib-backup-notice>
 
-@if (message) {
+@if (showCloseWarning) {
   <div>
     <div
       class="alert alert-danger sam-flex-row gap"

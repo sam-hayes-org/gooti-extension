@@ -13,24 +13,22 @@
         class="sam-ml-h"
         icon="pencil"
         (click)="onClickEditNick()"
-        title="Edit Nick"
+        title="Edit nick"
       ></lib-icon-button>
     </div>
   } @else {
-    <div class="nick-write input-group">
+    <div class="nick-write sam-field">
       <input
         #nickInput
         id="nick-edit-input"
         type="text"
         placeholder="Nick"
-        class="form-control form-control-sm"
-        style="font-size: 1rem"
-        [ngModel]="identity?.nick"
+        [ngModel]="$safeNavigationMigration(identity?.nick)"
         (keydown.enter)="onNickEnter(nickInput)"
         autocomplete="off"
       />
       <button
-        class="btn btn-outline-secondary"
+        class="icon"
         type="button"
         title="Cancel"
         (click)="isEditingNick = false"

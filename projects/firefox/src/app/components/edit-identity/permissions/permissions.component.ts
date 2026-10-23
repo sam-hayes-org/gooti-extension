@@ -1,6 +1,12 @@
-import { Component, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
+  ConfirmComponent,
   IconButtonComponent,
   Identity_DECRYPTED,
   NavComponent,
@@ -15,8 +21,9 @@ interface HostPermissions {
 
 @Component({
   selector: 'app-permissions',
-  imports: [IconButtonComponent],
+  imports: [ConfirmComponent, IconButtonComponent],
   templateUrl: './permissions.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './permissions.component.scss',
 })
 export class PermissionsComponent extends NavComponent implements OnInit {
@@ -39,6 +46,27 @@ export class PermissionsComponent extends NavComponent implements OnInit {
   async onClickRevokePermission(permission: Permission_DECRYPTED) {
     await this.#storage.deletePermission(permission.id);
     this.#buildHostsPermissions(this.identity?.id);
+  }
+
+  onClickClearHost(host: string, confirm: ConfirmComponent): void {
+    confirm.show(
+      `Clear permissions for ${host}?`,
+      () => this.#clearHost(host),
+    );
+  }
+
+  async #clearHost(host: string): Promise<void> {
+    const ids =
+      this.hostsPermissions
+        .find((entry) => entry.host === host)
+        ?.permissions.map((permission) => permission.id) ?? [];
+    try {
+      for (const id of ids) {
+        await this.#storage.deletePermission(id);
+      }
+    } finally {
+      this.#buildHostsPermissions(this.identity?.id);
+    }
   }
 
   #initialize(identityId: string) {

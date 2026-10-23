@@ -1,0 +1,61 @@
+:host {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.current {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 0;
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+  background: var(--background-light);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--background-light-hover);
+  }
+}
+
+.text {
+  min-width: 0;
+  flex: 1;
+}
+
+.nick-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.kicker {
+  display: block;
+  margin: 0;
+  color: #9aa3b2;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nick {
+  min-width: 0;
+  font-size: 18px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bunker {
+  flex: none;
+  color: #9aa3b2;
+  font-size: 16px;
+  font-weight: 400;
+}

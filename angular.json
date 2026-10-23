@@ -3,7 +3,10 @@
   "version": 1,
   "newProjectRoot": "projects",
   "cli": {
-    "schematicCollections": ["angular-eslint"]
+    "schematicCollections": [
+      "angular-eslint"
+    ],
+    "analytics": false
   },
   "projects": {
     "chrome": {
@@ -84,7 +87,11 @@
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "polyfills": ["zone.js", "zone.js/testing"],
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing",
+              "projects/chrome/src/extension-test-stub.js"
+            ],
             "tsConfig": "projects/chrome/tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -187,7 +194,11 @@
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "polyfills": ["zone.js", "zone.js/testing"],
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing",
+              "projects/chrome/src/extension-test-stub.js"
+            ],
             "tsConfig": "projects/firefox/tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -237,7 +248,11 @@
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "tsConfig": "projects/common/tsconfig.spec.json",
-            "polyfills": ["zone.js", "zone.js/testing"]
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing",
+              "projects/chrome/src/extension-test-stub.js"
+            ]
           }
         },
         "lint": {

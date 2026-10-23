@@ -3,6 +3,8 @@ import {
   Permission_ENCRYPTED,
   StorageService,
 } from '@common';
+import { stampPermissionDeleted } from '../../../backup/state';
+import { persistBackupSeal } from './seal-backup';
 
 export const deletePermission = async function (
   this: StorageService,
@@ -11,9 +13,28 @@ export const deletePermission = async function (
   this.assureIsInitialized();
 
   const browserSessionData = this.getBrowserSessionHandler().browserSessionData;
-  const browserSyncData = this.getBrowserSyncHandler().browserSyncData;
+  const browserSyncData = this.getVaultHandler().browserSyncData;
   if (!browserSessionData || !browserSyncData) {
     throw new Error('Browser session or sync data is undefined.');
+  }
+
+  const removed = browserSessionData[`permission_${permissionId}`];
+  const identity = removed
+    ? browserSessionData[`identity_${removed.identityId}`]
+    : undefined;
+  if (removed && identity && browserSessionData.backupState) {
+    browserSessionData.backupState = stampPermissionDeleted(
+      browserSessionData.backupState,
+      {
+        identityPubkey: identity.pubkey,
+        host: removed.host,
+        method: removed.method,
+        methodPolicy: removed.methodPolicy,
+        ...(removed.kind !== undefined ? { kind: removed.kind } : {}),
+      },
+      Date.now(),
+    );
+    await persistBackupSeal.call(this);
   }
 
   browserSessionData.permissions = browserSessionData.permissions.filter(
@@ -22,16 +43,41 @@ export const deletePermission = async function (
   delete browserSessionData[`permission_${permissionId}`];
   await this.getBrowserSessionHandler().saveFullData(browserSessionData);
 
-  // Handle Sync data
-  const encryptedPermissionId = await this.encrypt(permissionId);
-  await this.getBrowserSyncHandler().saveAndSetPartialData_Permissions({
+  // Handle Sync data. v3 ciphertext is not deterministic, so match by opening ids.
+  const encryptedPermissionId = await this.matchEncryptedId(
+    browserSyncData.permissions,
+    permissionId,
+  );
+  if (!encryptedPermissionId) {
+    throw new Error('Permission not found in browser sync data.');
+  }
+  await this.getVaultHandler().saveAndSetPartialData_Permissions({
     permissions: browserSyncData.permissions.filter(
       (x) => x !== encryptedPermissionId,
     ),
   });
-  await this.getBrowserSyncHandler().deleteSaveAndUnsetPartialData_Permission({
+  await this.getVaultHandler().deleteSaveAndUnsetPartialData_Permission({
     permissionId: encryptedPermissionId,
   });
+};
+
+export const encryptPermission = async function (
+  this: StorageService,
+  permission: Permission_DECRYPTED,
+): Promise<Permission_ENCRYPTED> {
+  const encryptedPermission: Permission_ENCRYPTED = {
+    id: await this.encrypt(permission.id),
+    identityId: await this.encrypt(permission.identityId),
+    host: await this.encrypt(permission.host),
+    method: await this.encrypt(permission.method),
+    methodPolicy: await this.encrypt(permission.methodPolicy),
+  };
+
+  if (typeof permission.kind !== 'undefined') {
+    encryptedPermission.kind = await this.encrypt(permission.kind.toString());
+  }
+
+  return encryptedPermission;
 };
 
 export const decryptPermission = async function (
@@ -47,7 +93,7 @@ export const decryptPermission = async function (
       methodPolicy: await this.decrypt(permission.methodPolicy, 'string'),
       host: await this.decrypt(permission.host, 'string'),
     };
-    if (permission.kind) {
+    if (typeof permission.kind !== 'undefined') {
       decryptedPermission.kind = await this.decrypt(permission.kind, 'number');
     }
     return decryptedPermission;
@@ -85,7 +131,7 @@ export const decryptPermission = async function (
       withLockedVault.password,
     ),
   };
-  if (permission.kind) {
+  if (typeof permission.kind !== 'undefined') {
     decryptedPermission.kind = await this.decryptWithLockedVault(
       permission.kind,
       'number',

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NavComponent, StorageService } from '@common';
@@ -7,6 +7,7 @@ import { NavComponent, StorageService } from '@common';
   selector: 'app-new',
   imports: [FormsModule],
   templateUrl: './new.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './new.component.scss',
 })
 export class NewComponent extends NavComponent {

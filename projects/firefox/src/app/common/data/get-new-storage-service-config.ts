@@ -1,14 +1,14 @@
+import { StorageServiceConfig } from '@common';
 import { FirefoxMetaHandler } from './firefox-meta-handler';
 import { FirefoxSessionHandler } from './firefox-session-handler';
-import { FirefoxSyncNoHandler } from './firefox-sync-no-handler';
-import { FirefoxSyncYesHandler } from './firefox-sync-yes-handler';
+import { FirefoxVaultHandler } from './firefox-vault-handler';
 
 export const getNewStorageServiceConfig = () => {
-  const storageConfig = {
+  const storageConfig: StorageServiceConfig = {
     browserSessionHandler: new FirefoxSessionHandler(),
-    browserSyncYesHandler: new FirefoxSyncYesHandler(),
-    browserSyncNoHandler: new FirefoxSyncNoHandler(),
+    vaultHandler: new FirefoxVaultHandler(),
     gootiMetaHandler: new FirefoxMetaHandler(),
+    autoBackup: true,
   };
 
   return storageConfig;

@@ -1,73 +1,67 @@
-<div class="sam-text-header">
-  <span class="brand">Gooti</span>
-</div>
-
-<div class="content-login-vault">
-  <div class="sam-flex-column gap" style="align-items: center">
-    <div class="logo-frame">
-      <img src="gooti.svg" height="120" width="120" alt="" />
+<div class="stage">
+  <div class="decision">
+    <div class="brand">
+      <img src="gooti.svg" width="18" height="18" alt="" />
+      <span>Gooti</span>
     </div>
 
-    <div class="sam-mt-2 input-group">
-      <input
-        #passwordInputElement
-        type="password"
-        class="form-control"
-        placeholder="vault password"
-        [(ngModel)]="loginPassword"
-        (keydown.enter)="loginVault(passwordInputElement.value)"
-      />
+    <div class="body">
+      @if (siteHost) {
+        <p class="host">{{ siteHost }}</p>
+      }
+      <h1>Unlock Gooti</h1>
+
+      <form (submit)="$event.preventDefault(); loginVault(passwordInputElement.value)">
+        <div class="field">
+          <input
+            #passwordInputElement
+            type="password"
+            placeholder="Gooti password"
+            aria-label="Gooti password"
+            [(ngModel)]="loginPassword"
+            name="password"
+          />
+          <button
+            type="button"
+            class="eye"
+            [attr.aria-label]="
+              passwordInputElement.type === 'password' ? 'Show password' : 'Hide password'
+            "
+            (click)="toggleType(passwordInputElement)"
+          >
+            <i
+              class="bi"
+              [class.bi-eye]="passwordInputElement.type === 'password'"
+              [class.bi-eye-slash]="passwordInputElement.type === 'text'"
+            ></i>
+          </button>
+        </div>
+
+        @if (showInvalidPasswordAlert) {
+          <p class="error">Invalid password</p>
+        }
+
+        <button class="submit" type="submit" [disabled]="!loginPassword">Unlock</button>
+      </form>
+
+      @if (fromBackground) {
+        <p class="hint">Closing this window stops the site's request.</p>
+      }
+
       <button
-        class="btn btn-outline-secondary"
         type="button"
-        (click)="toggleType(passwordInputElement)"
+        class="reset"
+        (click)="
+          confirm.show(
+            'Reset Gooti? All data in this browser will be deleted.',
+            onClickResetExtension.bind(this)
+          )
+        "
       >
-        <i
-          class="bi bi-eye"
-          [class.bi-eye]="passwordInputElement.type === 'password'"
-          [class.bi-eye-slash]="passwordInputElement.type === 'text'"
-        ></i>
+        Reset extension
       </button>
     </div>
-
-    <button
-      [disabled]="!loginPassword"
-      type="button"
-      class="sam-mt btn btn-primary"
-      (click)="loginVault()"
-    >
-      <div class="sam-flex-row gap-h">
-        <i class="bi bi-box-arrow-in-right"></i>
-        <span>Sign in</span>
-      </div>
-    </button>
-
-    <button
-      class="sam-mt"
-      (click)="
-        confirm.show(
-          'Do you really want to reset the extension? All data will be lost.',
-          onClickResetExtension.bind(this)
-        )
-      "
-      type="button"
-      class="btn btn-link"
-    >
-      Reset Extension
-    </button>
   </div>
 </div>
 
-<!----------->
-<!-- ALERT -->
-<!----------->
-@if (showInvalidPasswordAlert) {
-  <div style="position: absolute; bottom: 0; align-self: center">
-    <div class="alert alert-danger sam-flex-row gap" role="alert">
-      <i class="bi bi-exclamation-triangle"></i>
-      <span>Invalid password</span>
-    </div>
-  </div>
-}
-
-<lib-confirm #confirm> </lib-confirm>
+<lib-confirm #confirm></lib-confirm>

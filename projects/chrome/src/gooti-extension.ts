@@ -2,8 +2,6 @@
 import { Event, EventTemplate } from 'nostr-tools';
 import { Nip07Method } from '@common';
 
-type Relays = Record<string, { read: boolean; write: boolean }>;
-
 class Messenger {
   #requests = new Map<
     string,
@@ -61,82 +59,46 @@ const nostr = {
   messenger: new Messenger(),
 
   async getPublicKey(): Promise<string> {
-    debug('getPublicKey received');
-    const pubkey = await this.messenger.request('getPublicKey', {});
-    debug(`getPublicKey response:`);
-    debug(pubkey);
-    return pubkey;
+    return this.messenger.request('getPublicKey', {});
   },
 
   async signEvent(event: EventTemplate): Promise<Event> {
-    debug('signEvent received');
-    const signedEvent = await this.messenger.request('signEvent', event);
-    debug('signEvent response:');
-    debug(signedEvent);
-    return signedEvent;
-  },
-
-  async getRelays(): Promise<Relays> {
-    debug('getRelays received');
-    const relays = (await this.messenger.request('getRelays', {})) as Relays;
-    debug('getRelays response:');
-    debug(relays);
-    return relays;
+    return this.messenger.request('signEvent', event);
   },
 
   nip04: {
     that: this,
 
     async encrypt(peerPubkey: string, plaintext: string): Promise<string> {
-      debug('nip04.encrypt received');
-      const ciphertext = (await nostr.messenger.request('nip04.encrypt', {
+      return (await nostr.messenger.request('nip04.encrypt', {
         peerPubkey,
         plaintext,
       })) as string;
-      debug('nip04.encrypt response:');
-      debug(ciphertext);
-      return ciphertext;
     },
 
     async decrypt(peerPubkey: string, ciphertext: string): Promise<string> {
-      debug('nip04.decrypt received');
-      const plaintext = (await nostr.messenger.request('nip04.decrypt', {
+      return (await nostr.messenger.request('nip04.decrypt', {
         peerPubkey,
         ciphertext,
       })) as string;
-      debug('nip04.decrypt response:');
-      debug(plaintext);
-      return plaintext;
     },
   },
 
   nip44: {
     async encrypt(peerPubkey: string, plaintext: string): Promise<string> {
-      debug('nip44.encrypt received');
-      const ciphertext = (await nostr.messenger.request('nip44.encrypt', {
+      return (await nostr.messenger.request('nip44.encrypt', {
         peerPubkey,
         plaintext,
       })) as string;
-      debug('nip44.encrypt response:');
-      debug(ciphertext);
-      return ciphertext;
     },
 
     async decrypt(peerPubkey: string, ciphertext: string): Promise<string> {
-      debug('nip44.decrypt received');
-      const plaintext = (await nostr.messenger.request('nip44.decrypt', {
+      return (await nostr.messenger.request('nip44.decrypt', {
         peerPubkey,
         ciphertext,
       })) as string;
-      debug('nip44.decrypt response:');
-      debug(plaintext);
-      return plaintext;
     },
   },
 };
 
-window.nostr = nostr as any;
-
-const debug = function (value: any) {
-  console.log(JSON.stringify(value));
-};
+(window as unknown as { nostr: typeof nostr }).nostr = nostr;

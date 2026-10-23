@@ -1,0 +1,146 @@
+:host {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: var(--size);
+  background: var(--background);
+  font-size: 20px;
+  font-weight: 500;
+  text-align: center;
+  display: grid;
+  align-items: center;
+
+  .title,
+  .clear {
+    grid-area: 1 / 1;
+  }
+
+  .title {
+    height: 32px;
+  }
+
+  .clear {
+    justify-self: end;
+    font-size: 14px;
+  }
+}
+
+.empty {
+  margin: 8px var(--size);
+  color: #9aa3b2;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 var(--size) 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--background-light);
+}
+
+.top,
+.bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.host,
+.detail {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.host {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.time,
+.detail {
+  color: #9aa3b2;
+  font-size: 13px;
+}
+
+.outcome {
+  flex: none;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.allowed,
+.backedUp,
+.updated {
+  background: rgba(25, 135, 84, 0.22);
+  color: #8fd9ad;
+}
+
+.once {
+  background: rgba(13, 110, 253, 0.16);
+  color: #c5dbff;
+}
+
+.denied,
+.failed {
+  background: rgba(220, 53, 69, 0.22);
+  color: #f0a8a8;
+}
+
+.dismissed,
+.current {
+  background: rgba(154, 163, 178, 0.16);
+  color: #c5ceda;
+}
+
+.reason {
+  margin: 0;
+  color: #f0a8a8;
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.kicker {
+  margin: 6px 0 2px;
+  color: #9aa3b2;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.changes {
+  margin: 0;
+  // Bootstrap's .row > * pads every child. A full padding reset sits left of the lines above.
+  padding: 0 calc(var(--bs-gutter-x) * 0.5);
+  list-style: none;
+
+  li {
+    color: #d7dee8;
+    font-size: 13px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  li + li {
+    margin-top: 2px;
+  }
+}

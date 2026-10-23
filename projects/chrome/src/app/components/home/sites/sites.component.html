@@ -1,0 +1,36 @@
+<div class="custom-header" style="position: sticky; top: 0">
+  <span class="text">Sites</span>
+</div>
+
+@let sites = this.sites();
+
+@if (sites.length === 0) {
+  <div class="empty-sites">
+    <strong>No sites yet</strong>
+    <span>Sites you use with an identity show up here.</span>
+  </div>
+} @else {
+  <p class="copy">
+    Each site uses the identity shown. Remove a site, and its next request asks for an identity
+    again. Its permissions stay with the identity.
+  </p>
+}
+
+@for (entry of sites; track entry.host) {
+  <p class="host">{{ entry.host }}</p>
+  <lib-identity-row
+    [nick]="entry.identity.nick"
+    [pubkey]="entry.identity.pubkey"
+    [color]="entry.identity.color"
+    [bunker]="!!entry.identity.bunker"
+    [unlinked]="!!entry.identity.bunker && !entry.identity.bunker.clientSecretKey"
+    (activate)="onClickSite(entry)"
+  >
+    <button type="button" class="remove" (click)="onClickRemove(entry.host, $event)">
+      Remove
+    </button>
+  </lib-identity-row>
+}
+
+<lib-confirm #confirm></lib-confirm>
+<lib-toast #toast></lib-toast>

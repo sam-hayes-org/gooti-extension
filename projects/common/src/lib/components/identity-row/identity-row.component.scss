@@ -1,0 +1,45 @@
+:host {
+  display: block;
+  margin-bottom: var(--row-margin, 8px);
+}
+
+.identity {
+  height: var(--row-height, 48px);
+  min-height: var(--row-height, 48px);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--row-gap, 8px);
+  padding-left: 10px;
+  padding-right: 8px;
+  background: var(--background-light);
+  border-radius: var(--row-radius, 8px);
+  border-left: 4px solid var(--primary);
+  cursor: pointer;
+  overflow: hidden;
+
+  &:hover {
+    background: var(--background-light-hover);
+  }
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.nick {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-weight: var(--row-nick-weight, 400);
+}
+
+.bunker {
+  flex: none;
+  color: #9aa3b2;
+}

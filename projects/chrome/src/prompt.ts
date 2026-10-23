@@ -1,51 +1,92 @@
 import browser from 'webextension-polyfill';
-import { Buffer } from 'buffer';
-import { Nip07Method, PromptResponse, PromptResponseMessage } from '@common';
+import {
+  avatarCells,
+  bunkerSiteQuestionLabel,
+  BunkerSiteQuestion,
+  colorForPubkey,
+  fillPermissionCard,
+  Nip07Method,
+  permissionCardTitle,
+  PermissionCardLine,
+  PermissionCardSnapshot,
+  PromptResponse,
+  PromptResponseMessage,
+} from '@common';
 
 const params = new URLSearchParams(location.search);
 const id = params.get('id') as string;
-const method = params.get('method') as Nip07Method;
+const method = params.get('method') as Nip07Method | null;
 const host = params.get('host') as string;
 const nick = params.get('nick') as string;
-const event = Buffer.from(params.get('event') as string, 'base64').toString();
-
-let title = '';
-switch (method) {
-  case 'getPublicKey':
-    title = 'Get Public Key';
-    break;
-
-  case 'signEvent':
-    title = 'Sign Event';
-    break;
-
-  case 'nip04.encrypt':
-    title = 'Encrypt';
-    break;
-
-  case 'nip44.encrypt':
-    title = 'Encrypt';
-    break;
-
-  case 'nip04.decrypt':
-    title = 'Decrypt';
-    break;
-
-  case 'nip44.decrypt':
-    title = 'Decrypt';
-    break;
-
-  case 'getRelays':
-    title = 'Get Relays';
-    break;
-
-  default:
-    break;
-}
+const bunker = params.get('bunker') === '1';
+const cardMode = params.get('card') === '1';
+const notice = params.get('notice');
+const noticeMode = notice === 'desktop' || notice === 'bunker';
 
 const titleSpanElement = document.getElementById('titleSpan');
-if (titleSpanElement) {
-  titleSpanElement.innerText = title;
+
+function setTitle(title: string) {
+  if (titleSpanElement) {
+    titleSpanElement.innerText = title;
+  }
+}
+
+function setDanger(danger: boolean) {
+  titleSpanElement?.classList.toggle('danger', danger);
+}
+
+function showOnly(visibleId: string) {
+  for (const elementId of ['cardGetPublicKey', 'cardBunkerAsk', 'cardConsequence']) {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.hidden = elementId !== visibleId;
+    }
+  }
+}
+
+function setActionsEnabled(enabled: boolean) {
+  document
+    .querySelectorAll<HTMLButtonElement>('.actions button')
+    .forEach((button) => {
+      button.disabled = !enabled;
+    });
+}
+
+function paintSigner() {
+  const pk = params.get('pk') ?? '';
+  const stored = params.get('color');
+  const color = pk ? colorForPubkey(pk, stored ?? undefined) : '';
+  const stripe = document.getElementById('stripe');
+  if (stripe && color) {
+    stripe.style.background = color;
+  }
+  const avatar = document.getElementById('avatar');
+  if (!avatar) {
+    return;
+  }
+  avatar.replaceChildren();
+  if (!pk) {
+    const letter = document.createElement('span');
+    letter.className = 'letter';
+    letter.textContent = (nick || '?').slice(0, 1).toUpperCase();
+    if (color) {
+      letter.style.color = color;
+    }
+    avatar.append(letter);
+    return;
+  }
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 5 5');
+  for (const cell of avatarCells(pk)) {
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', String(cell.x));
+    rect.setAttribute('y', String(cell.y));
+    rect.setAttribute('width', '1');
+    rect.setAttribute('height', '1');
+    rect.setAttribute('fill', color);
+    svg.append(rect);
+  }
+  avatar.append(svg);
 }
 
 Array.from(document.getElementsByClassName('nick-INSERT')).forEach(
@@ -60,121 +101,129 @@ Array.from(document.getElementsByClassName('host-INSERT')).forEach(
   }
 );
 
-const kindSpanElement = document.getElementById('kindSpan');
-if (kindSpanElement) {
-  kindSpanElement.innerText = JSON.parse(event).kind;
-}
+paintSigner();
 
-const cardGetPublicKeyElement = document.getElementById('cardGetPublicKey');
-if (cardGetPublicKeyElement) {
-  if (method === 'getPublicKey') {
-    // Do nothing.
-  } else {
-    cardGetPublicKeyElement.style.display = 'none';
+if (bunker) {
+  const note = document.getElementById('bunkerNote');
+  if (note) {
+    note.hidden = false;
   }
 }
 
-const cardGetRelaysElement = document.getElementById('cardGetRelays');
-if (cardGetRelaysElement) {
-  if (method === 'getRelays') {
-    // Do nothing.
-  } else {
-    cardGetRelaysElement.style.display = 'none';
+let seenRevision = 0;
+
+function applyCard(snapshot: PermissionCardSnapshot) {
+  if (!snapshot || snapshot.revision < seenRevision) {
+    return;
   }
+  seenRevision = snapshot.revision;
+  const list = document.getElementById('cardLines');
+  const lines = Array.isArray(snapshot.lines) ? snapshot.lines : [];
+  if (list) {
+    fillPermissionCard(list, lines);
+    list.classList.toggle('single', lines.length === 1);
+  }
+  const only = lines.length === 1 ? lines[0] : undefined;
+  if (only) {
+    setTitle(only.headline);
+    setDanger(only.danger);
+  } else {
+    setTitle(permissionCardTitle(lines, bunker));
+    setDanger(false);
+  }
+  setActionsEnabled(lines.length > 0);
+  void browser.runtime
+    .sendMessage({ type: 'card-shown', id, count: lines.length })
+    .catch(() => undefined);
 }
 
-const cardSignEventElement = document.getElementById('cardSignEvent');
-const card2SignEventElement = document.getElementById('card2SignEvent');
-if (cardSignEventElement && card2SignEventElement) {
-  if (method === 'signEvent') {
-    const card2SignEvent_jsonElement = document.getElementById(
-      'card2SignEvent_json'
-    );
-    if (card2SignEvent_jsonElement) {
-      card2SignEvent_jsonElement.innerText = event;
+/** The background opens this when a bunker did not answer. Nothing to approve. */
+function showNotice(which: 'desktop' | 'bunker') {
+  showOnly('');
+  document.title = 'Gooti';
+  setTitle(which === 'desktop' ? 'Gooti Desktop did not answer' : 'Your bunker did not answer');
+  const text = document.getElementById('noticeText');
+  if (text) {
+    text.innerText =
+      which === 'desktop'
+        ? 'Open Gooti Desktop and unlock it, then try again on the site.'
+        : 'Check that your bunker app is open, then try again on the site.';
+    text.hidden = false;
+  }
+  for (const elementId of ['signer', 'requestActions']) {
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.hidden = true;
     }
-  } else {
-    cardSignEventElement.style.display = 'none';
-    card2SignEventElement.style.display = 'none';
   }
+  const actions = document.getElementById('noticeActions');
+  if (actions) {
+    actions.hidden = false;
+  }
+  document.getElementById('noticeOkButton')?.addEventListener('click', () => window.close());
 }
 
-const cardNip04EncryptElement = document.getElementById('cardNip04Encrypt');
-const card2Nip04EncryptElement = document.getElementById('card2Nip04Encrypt');
-if (cardNip04EncryptElement && card2Nip04EncryptElement) {
-  if (method === 'nip04.encrypt') {
-    const card2Nip04Encrypt_textElement = document.getElementById(
-      'card2Nip04Encrypt_text'
-    );
-    if (card2Nip04Encrypt_textElement) {
-      const eventObject: { peerPubkey: string; plaintext: string } =
-        JSON.parse(event);
-      card2Nip04Encrypt_textElement.innerText = eventObject.plaintext;
+if (noticeMode) {
+  showNotice(notice);
+} else if (cardMode) {
+  showOnly('cardConsequence');
+  setTitle(bunker ? 'Send to bunker' : 'Sign event');
+  setActionsEnabled(false);
+  browser.runtime.onMessage.addListener((update: unknown) => {
+    if (!update || typeof update !== 'object') {
+      return;
     }
-  } else {
-    cardNip04EncryptElement.style.display = 'none';
-    card2Nip04EncryptElement.style.display = 'none';
-  }
+    const body = update as {
+      type?: string;
+      id?: string;
+      revision?: number;
+      lines?: PermissionCardLine[];
+    };
+    if (
+      body.type === 'card-lines' &&
+      body.id === id &&
+      typeof body.revision === 'number'
+    ) {
+      applyCard({ revision: body.revision, lines: body.lines ?? [] });
+    }
+  });
+  void browser.runtime
+    .sendMessage({ type: 'card-ready', id })
+    .then((snapshot) => {
+      const body = snapshot as PermissionCardSnapshot;
+      if (body && typeof body.revision === 'number') {
+        applyCard(body);
+      }
+    })
+    .catch(() => undefined);
+} else if (method === 'getPublicKey') {
+  showOnly('');
+  setTitle('Read your public key');
+} else if (isBunkerSiteQuestion(params.get('ask'))) {
+  const ask = params.get('ask') as BunkerSiteQuestion;
+  showOnly('');
+  const label = bunkerSiteQuestionLabel(ask);
+  setTitle(label.charAt(0).toUpperCase() + label.slice(1));
+  setDanger(ask === 'delete' || ask === 'erase');
+} else {
+  showOnly('');
 }
 
-const cardNip44EncryptElement = document.getElementById('cardNip44Encrypt');
-const card2Nip44EncryptElement = document.getElementById('card2Nip44Encrypt');
-if (cardNip44EncryptElement && card2Nip44EncryptElement) {
-  if (method === 'nip44.encrypt') {
-    const card2Nip44Encrypt_textElement = document.getElementById(
-      'card2Nip44Encrypt_text'
-    );
-    if (card2Nip44Encrypt_textElement) {
-      const eventObject: { peerPubkey: string; plaintext: string } =
-        JSON.parse(event);
-      card2Nip44Encrypt_textElement.innerText = eventObject.plaintext;
-    }
-  } else {
-    cardNip44EncryptElement.style.display = 'none';
-    card2Nip44EncryptElement.style.display = 'none';
-  }
-}
-const cardNip04DecryptElement = document.getElementById('cardNip04Decrypt');
-const card2Nip04DecryptElement = document.getElementById('card2Nip04Decrypt');
-if (cardNip04DecryptElement && card2Nip04DecryptElement) {
-  if (method === 'nip04.decrypt') {
-    const card2Nip04Decrypt_textElement = document.getElementById(
-      'card2Nip04Decrypt_text'
-    );
-    if (card2Nip04Decrypt_textElement) {
-      const eventObject: { peerPubkey: string; ciphertext: string } =
-        JSON.parse(event);
-      card2Nip04Decrypt_textElement.innerText = eventObject.ciphertext;
-    }
-  } else {
-    cardNip04DecryptElement.style.display = 'none';
-    card2Nip04DecryptElement.style.display = 'none';
-  }
-}
-
-const cardNip44DecryptElement = document.getElementById('cardNip44Decrypt');
-const card2Nip44DecryptElement = document.getElementById('card2Nip44Decrypt');
-if (cardNip44DecryptElement && card2Nip44DecryptElement) {
-  if (method === 'nip44.decrypt') {
-    const card2Nip44Decrypt_textElement = document.getElementById(
-      'card2Nip44Decrypt_text'
-    );
-    if (card2Nip44Decrypt_textElement) {
-      const eventObject: { peerPubkey: string; ciphertext: string } =
-        JSON.parse(event);
-      card2Nip44Decrypt_textElement.innerText = eventObject.ciphertext;
-    }
-  } else {
-    cardNip44DecryptElement.style.display = 'none';
-    card2Nip44DecryptElement.style.display = 'none';
-  }
+function isBunkerSiteQuestion(value: string | null): value is BunkerSiteQuestion {
+  return value === 'delete' || value === 'erase';
 }
 
 //
 // Functions
 //
 
+let delivered = false;
+
 function deliver(response: PromptResponse) {
+  if (delivered) {
+    return;
+  }
+  delivered = true;
   const message: PromptResponseMessage = {
     id,
     response,
@@ -183,6 +232,19 @@ function deliver(response: PromptResponse) {
   browser.runtime.sendMessage(message);
   window.close();
 }
+
+// Closing the window without a choice fails this request once.
+window.addEventListener('beforeunload', () => {
+  if (delivered || noticeMode) {
+    return;
+  }
+  delivered = true;
+  const message: PromptResponseMessage = {
+    id,
+    response: 'reject-once',
+  };
+  browser.runtime.sendMessage(message);
+});
 
 document.addEventListener('DOMContentLoaded', function () {
   const rejectJustOnceButton = document.getElementById('rejectJustOnceButton');

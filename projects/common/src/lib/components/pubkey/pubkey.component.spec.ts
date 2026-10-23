@@ -14,6 +14,7 @@ describe('PubkeyComponent', () => {
 
     fixture = TestBed.createComponent(PubkeyComponent);
     component = fixture.componentInstance;
+    component.value = 'ab'.repeat(32);
     fixture.detectChanges();
   });
 

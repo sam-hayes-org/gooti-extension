@@ -1,0 +1,72 @@
+<div class="decision">
+  <div class="brand">
+    <img src="gooti.svg" width="18" height="18" alt="" />
+    <span>Gooti</span>
+  </div>
+
+  <div class="body">
+    <h1>Restore from backup</h1>
+    <p class="hint">
+      Enter the passphrase and relays you used when you turned on backup. Then choose a password for this browser.
+    </p>
+
+    <form (submit)="$event.preventDefault(); restore()">
+      <label class="label" for="restore-phrase">Passphrase</label>
+      <textarea
+        id="restore-phrase"
+        rows="3"
+        placeholder="12 words"
+        aria-label="Passphrase"
+        [(ngModel)]="phrase"
+        name="phrase"
+        [disabled]="busy"
+      ></textarea>
+
+      <label class="label" for="restore-relays">Relays</label>
+      <textarea
+        id="restore-relays"
+        rows="3"
+        aria-label="Relays"
+        [(ngModel)]="relays"
+        name="relays"
+        [disabled]="busy"
+      ></textarea>
+
+      <div class="field">
+        <input
+          #passwordInputElement
+          type="password"
+          placeholder="Gooti password"
+          aria-label="Gooti password"
+          [(ngModel)]="password"
+          name="password"
+          [disabled]="busy"
+        />
+        <button
+          type="button"
+          class="eye"
+          [attr.aria-label]="
+            passwordInputElement.type === 'password' ? 'Show password' : 'Hide password'
+          "
+          (click)="toggleType(passwordInputElement)"
+        >
+          <i
+            class="bi"
+            [class.bi-eye]="passwordInputElement.type === 'password'"
+            [class.bi-eye-slash]="passwordInputElement.type === 'text'"
+          ></i>
+        </button>
+      </div>
+
+      @if (error) {
+        <p class="error">{{ error }}</p>
+      }
+
+      <button class="submit" type="submit" [disabled]="!canRestore">
+        {{ busy ? 'Restoring…' : 'Restore from backup' }}
+      </button>
+    </form>
+
+    <button type="button" class="quiet" (click)="back()" [disabled]="busy">Back</button>
+  </div>
+</div>

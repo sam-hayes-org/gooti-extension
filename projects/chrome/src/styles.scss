@@ -5,6 +5,11 @@
   "../../../node_modules/bootstrap-icons/font/bootstrap-icons.min.css"
 );
 
+// Inter, bundled with the extension so the text looks the same on every system and in both browsers.
+@include meta.load-css(
+  "../../../node_modules/@fontsource-variable/inter/wght.css"
+);
+
 // Load the common styles
 @include meta.load-css("../../common/src/lib/styles/styles.scss");
 

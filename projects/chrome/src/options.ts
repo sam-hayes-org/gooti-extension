@@ -43,20 +43,21 @@ function rebuildSnapshotsList(snapshots: GootiMetaData_VaultSnapshot[]) {
 
   for (const snapshot of snapshots) {
     const li = document.createElement('li');
+    const name = document.createElement('p');
+    name.className = 'file';
+    name.textContent = snapshot.fileName;
 
-    const test =
-      '"' +
-      snapshot.fileName +
-      '"' +
-      ' -> vault version: ' +
+    const count = snapshot.data.identities.length;
+    const meta = document.createElement('p');
+    meta.className = 'meta';
+    meta.textContent =
+      'Version ' +
       snapshot.data.version +
-      ' -> identities: ' +
-      snapshot.data.identities.length +
-      ' -> relays: ' +
-      snapshot.data.relays.length +
-      '';
+      ' · ' +
+      count +
+      (count === 1 ? ' identity' : ' identities');
 
-    li.innerText = test;
+    li.append(name, meta);
     ul.appendChild(li);
   }
 }

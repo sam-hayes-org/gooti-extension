@@ -1,12 +1,18 @@
-import { Component, Input, OnInit } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { NostrHelper } from '@common';
-import { IconButtonComponent } from "../icon-button/icon-button.component";
+import { IconButtonComponent } from '../icon-button/icon-button.component';
 
 @Component({
   // eslint-disable-next-line @angular-eslint/component-selector
   selector: 'lib-pubkey',
   imports: [IconButtonComponent],
   templateUrl: './pubkey.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './pubkey.component.scss',
 })
 export class PubkeyComponent implements OnInit {
@@ -24,7 +30,7 @@ export class PubkeyComponent implements OnInit {
     this.npubString = NostrHelper.splitKey(
       pubkeyObject.npub,
       this.first,
-      this.last
+      this.last,
     );
   }
 

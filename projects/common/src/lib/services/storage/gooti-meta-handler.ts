@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BrowserSyncFlow, GootiMetaData } from './types';
+import { GOOTI_META_PROPERTIES, GootiMetaData } from './types';
 
 export abstract class GootiMetaHandler {
   get gootiMetaData(): GootiMetaData | undefined {
@@ -8,11 +8,10 @@ export abstract class GootiMetaHandler {
 
   #gootiMetaData?: GootiMetaData;
 
-  readonly metaProperties = ['syncFlow', 'vaultSnapshots'];
+  readonly metaProperties: string[] = [...GOOTI_META_PROPERTIES];
   /**
-   * Load the full data from the storage. If the storage is used for storing
-   * other data (e.g. browser sync data when the user decided to NOT sync),
-   * make sure to handle the "meta properties" to only load these.
+   * Load the full data from the storage. Local storage also holds the vault,
+   * so only the meta properties are returned.
    *
    * ATTENTION: Make sure to call "setFullData(..)" afterwards to update the in-memory data.
    */
@@ -23,21 +22,6 @@ export abstract class GootiMetaHandler {
   }
 
   abstract saveFullData(data: GootiMetaData): Promise<void>;
-
-  /**
-   * Sets the browser sync flow for the user and immediately saves it.
-   */
-  async setBrowserSyncFlow(flow: BrowserSyncFlow): Promise<void> {
-    if (!this.#gootiMetaData) {
-      this.#gootiMetaData = {
-        syncFlow: flow,
-      };
-    } else {
-      this.#gootiMetaData.syncFlow = flow;
-    }
-
-    await this.saveFullData(this.#gootiMetaData);
-  }
 
   abstract clearData(keep: string[]): Promise<void>;
 }

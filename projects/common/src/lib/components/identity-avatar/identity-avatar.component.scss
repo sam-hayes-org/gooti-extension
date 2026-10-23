@@ -1,0 +1,13 @@
+:host {
+  display: block;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--identity-color, var(--primary)) 22%, var(--background));
+}
+
+svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
