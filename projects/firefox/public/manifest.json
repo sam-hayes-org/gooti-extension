@@ -46,7 +46,12 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "fox@getgooti.com"
+      "id": "fox@getgooti.com",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
   }
 }
