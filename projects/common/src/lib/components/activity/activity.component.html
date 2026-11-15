@@ -1,0 +1,72 @@
+<div class="header">
+  <span class="title">Activity</span>
+  @if (entries.length > 0) {
+    <button
+      type="button"
+      class="button action quiet clear"
+      (click)="confirm.show('Clear activity?', onConfirmClear.bind(this))"
+    >
+      Clear
+    </button>
+  }
+</div>
+
+@if (entries.length === 0) {
+  <p class="empty">No activity yet.</p>
+} @else {
+  @for (entry of entries; track $index) {
+    <article class="row">
+      @if (isBackup(entry)) {
+        <div class="top">
+          <span class="host">Backup</span>
+          <span class="time">{{ time(entry.at) }}</span>
+        </div>
+        <div class="bottom">
+          <span class="detail">{{ backupModeLabel[entry.backup] }}</span>
+          <span [class]="'outcome ' + entry.result">{{ backupResultLabel[entry.result] }}</span>
+        </div>
+        @if (entry.reason) {
+          <p class="reason">{{ entry.reason }}</p>
+        }
+        @if (entry.took?.length) {
+          <p class="kicker">On this browser</p>
+          <ul class="changes">
+            @for (line of entry.took; track $index) {
+              <li>{{ line }}</li>
+            }
+          </ul>
+        }
+        @if (entry.sent?.length) {
+          <p class="kicker">Sent</p>
+          <ul class="changes">
+            @for (line of entry.sent; track $index) {
+              <li>{{ line }}</li>
+            }
+          </ul>
+        }
+      } @else {
+        <div class="top">
+          <span class="host">{{ entry.host }}</span>
+          <span class="time">{{ time(entry.at) }}</span>
+        </div>
+        <div class="bottom">
+          <span class="detail">
+            @if (entry.identity) {
+              {{ entry.identity }} ·
+            }
+            {{ entry.method }}
+            @if (entry.kind !== undefined) {
+              · kind {{ entry.kind }}
+            }
+          </span>
+          <span [class]="'outcome ' + entry.outcome">{{ outcomeLabel[entry.outcome] }}</span>
+        </div>
+        @if (entry.reason) {
+          <p class="reason">{{ entry.reason }}</p>
+        }
+      }
+    </article>
+  }
+}
+
+<lib-confirm #confirm></lib-confirm>

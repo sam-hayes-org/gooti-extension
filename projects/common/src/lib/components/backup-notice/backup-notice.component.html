@@ -1,0 +1,32 @@
+@if (toolbar) {
+  @if (running) {
+    <div class="bar" role="progressbar" aria-label="Backing up"></div>
+  } @else if (error || took.length || sent.length) {
+    <section class="card" role="status">
+      <div class="head">
+        <span class="title">{{ error ? 'Backup failed' : 'Backup' }}</span>
+        <button type="button" class="sam-text-link" (click)="dismiss()">Close</button>
+      </div>
+      @if (error) {
+        <p class="error">{{ error }}</p>
+      } @else {
+        @if (took.length) {
+          <p class="kicker">On this browser</p>
+          <ul>
+            @for (line of took; track $index) {
+              <li>{{ line }}</li>
+            }
+          </ul>
+        }
+        @if (sent.length) {
+          <p class="kicker">Sent</p>
+          <ul>
+            @for (line of sent; track $index) {
+              <li>{{ line }}</li>
+            }
+          </ul>
+        }
+      }
+    </section>
+  }
+}

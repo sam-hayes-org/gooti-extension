@@ -12,7 +12,7 @@
     cursor: pointer;
 
     &:hover {
-      background: gray;
+      background: var(--background-light-hover);
     }
   }
 }

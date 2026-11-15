@@ -1,9 +1,12 @@
-import { Component, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  BrowserSyncFlow,
   GootiMetaData_VaultSnapshot,
-  IconButtonComponent,
   NavComponent,
   StartupService,
   StorageService,
@@ -13,14 +16,14 @@ import { getNewStorageServiceConfig } from '../../common/data/get-new-storage-se
 
 @Component({
   selector: 'app-vault-import',
-  imports: [IconButtonComponent, FormsModule],
+  imports: [FormsModule],
   templateUrl: './vault-import.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './vault-import.component.scss',
 })
 export class VaultImportComponent extends NavComponent implements OnInit {
   snapshots: GootiMetaData_VaultSnapshot[] = [];
   selectedSnapshot: GootiMetaData_VaultSnapshot | undefined;
-  syncText: string | undefined;
 
   readonly #storage = inject(StorageService);
   readonly #startup = inject(StartupService);
@@ -56,19 +59,5 @@ export class VaultImportComponent extends NavComponent implements OnInit {
     this.snapshots = (
       this.#storage.getGootiMetaHandler().gootiMetaData?.vaultSnapshots ?? []
     ).sortBy((x) => x.fileName, 'desc');
-
-    const syncFlow =
-      this.#storage.getGootiMetaHandler().gootiMetaData?.syncFlow;
-
-    switch (syncFlow) {
-      case BrowserSyncFlow.BROWSER_SYNC:
-        this.syncText = 'GOOGLE CHROME';
-        break;
-
-      default:
-      case BrowserSyncFlow.NO_SYNC:
-        this.syncText = 'OFF';
-        break;
-    }
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { NavComponent } from '@common';
 
@@ -6,6 +6,7 @@ import { NavComponent } from '@common';
   selector: 'app-home',
   imports: [],
   templateUrl: './home.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.component.scss',
 })
 export class HomeComponent extends NavComponent {

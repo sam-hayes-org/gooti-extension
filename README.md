@@ -14,7 +14,6 @@ async window.nostr.signEvent(event: { created_at: number, kind: number, tags: st
 It also implements these optional methods:
 
 ```typescript
-async window.nostr.getRelays(): { [url: string]: {read: boolean, write: boolean} }
 async window.nostr.nip04.encrypt(pubkey, plaintext): string
 async window.nostr.nip04.decrypt(pubkey, ciphertext): string
 async window.nostr.nip44.encrypt(pubkey, plaintext): string
@@ -65,4 +64,4 @@ then
 
 ---
 
-LICENSE: Public Domain
+License: MIT (see `LICENSE`). Versions up to 1.0.0 were released under the Unlicense. Every build carries the licenses of what it ships with (`3rdpartylicenses.txt` and `licenses/`).

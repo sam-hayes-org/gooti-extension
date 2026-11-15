@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 
 import { EditIdentityComponent } from './edit-identity.component';
 
@@ -8,13 +9,13 @@ describe('EditIdentityComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [EditIdentityComponent]
+      imports: [EditIdentityComponent],
+      providers: [{ provide: ActivatedRoute, useValue: {} }],
     })
     .compileComponents();
 
     fixture = TestBed.createComponent(EditIdentityComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {

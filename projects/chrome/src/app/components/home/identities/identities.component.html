@@ -1,9 +1,7 @@
-<!-- eslint-disable @angular-eslint/template/interactive-supports-focus -->
-<!-- eslint-disable @angular-eslint/template/click-events-have-key-events -->
 <div class="custom-header" style="position: sticky; top: 0">
   <span class="text">Identities </span>
 
-  <button class="button btn btn-primary btn-sm" (click)="onClickNewIdentity()">
+  <button type="button" class="button action primary" (click)="onClickNewIdentity()">
     <div class="sam-flex-row gap-h">
       <i class="bi bi-plus-lg"></i>
       <span>New</span>
@@ -12,71 +10,73 @@
 </div>
 
 @let sessionData = storage.getBrowserSessionHandler().browserSessionData;
-<!-- - -->
 @let identities = sessionData?.identities ?? [];
-@if (identities.length === 0) {
-  <div
-    style="
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    "
+@let site = siteIdentity;
+
+@if (fromBackground && host && !site) {
+  <p class="copy">
+    Choose an identity for {{ host }}.<br />
+    You can change it later.
+  </p>
+}
+@if (hostReady && !fromBackground && host && !site) {
+  <p class="copy">{{ host }} has no identity yet.</p>
+}
+@if (hostReady && !fromBackground && !host && identities.length > 0) {
+  <p class="copy">
+    Open a website to choose its identity.
+  </p>
+}
+
+@if (site) {
+  <lib-identity-current
+    [nick]="site.nick"
+    [pubkey]="site.pubkey"
+    [color]="site.color"
+    [bunker]="!!site.bunker"
+    [unlinked]="!!site.bunker && !site.bunker.clientSecretKey"
+    (activate)="onClickSiteIdentity(site)"
   >
-    <span class="sam-text-muted">
-      Create your first identity by clicking on the button in the upper right
-      corner.
+    @if (host && !fromBackground) {
+      <button type="button" class="use" (click)="onClickRemove($event)">
+        Remove
+      </button>
+    }
+  </lib-identity-current>
+  <p class="copy site-line">{{ host }} uses this identity.</p>
+}
+@if (identities.length === 0) {
+  <div class="empty-identity">
+    <strong>No identity yet</strong>
+    <span>
+      Add your first identity with New, or restore from your backup in Settings.
     </span>
   </div>
 }
 @for (identityId of identities; track identityId) {
-  @let identity = sessionData?.[`identity_${identityId}`];
-  @if (identity) {
-    <div
-      class="identity"
-      style="overflow: hidden"
-      (click)="onClickEditIdentity(identity)"
+  @let identity =
+    $safeNavigationMigration(sessionData?.[`identity_${identityId}`]);
+  @if (identity && identity.id !== site?.id) {
+    <lib-identity-row
+      [nick]="identity.nick"
+      [pubkey]="identity.pubkey"
+      [color]="identity.color"
+      [bunker]="!!identity.bunker"
+      [unlinked]="!!identity.bunker && !identity.bunker.clientSecretKey"
+      (activate)="onClickEditIdentity(identity)"
     >
-      @let isSelected = identity.id === sessionData?.selectedIdentityId;
-
-      <span
-        class="no-select"
-        style="overflow-x: hidden; text-overflow: ellipsis; white-space: nowrap"
-        [class.not-active]="!isSelected"
-      >
-        {{ identity.nick }}
-      </span>
-
-      <div class="sam-flex-grow"></div>
-
-      @if (isSelected) {
-        <lib-icon-button
-          icon="star-fill"
-          title="Edit identity"
-          style="pointer-events: none; color: var(--bs-pink)"
-        ></lib-icon-button>
+      @if (host) {
+        <button
+          type="button"
+          class="use"
+          (click)="onClickUse(identity.id, $event)"
+        >
+          Use
+        </button>
       }
-
-      <div class="buttons sam-flex-row gap-h">
-        @if (!isSelected) {
-          <lib-icon-button
-            icon="star-fill"
-            title="Select identity"
-            (click)="
-              onClickSwitchIdentity(identity.id, $event);
-              toast.show('Identity changed')
-            "
-          ></lib-icon-button>
-        }
-      </div>
-      <lib-icon-button
-        icon="arrow-right"
-        title="Edit identity"
-        style="pointer-events: none"
-      ></lib-icon-button>
-    </div>
+    </lib-identity-row>
   }
 }
 
+<lib-confirm #confirm></lib-confirm>
 <lib-toast #toast></lib-toast>

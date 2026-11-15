@@ -63,7 +63,8 @@
   }
 
   .edit-identity-outlet {
-    flex-grow: 1;
-    overflow-y: hidden;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
   }
 }

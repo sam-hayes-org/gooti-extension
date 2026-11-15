@@ -1,0 +1,12 @@
+<!-- eslint-disable @angular-eslint/template/interactive-supports-focus -->
+<!-- eslint-disable @angular-eslint/template/click-events-have-key-events -->
+<div class="identity" [style.border-left-color]="fill" (click)="activate.emit()">
+  <lib-identity-avatar [pubkey]="pubkey" [color]="color"></lib-identity-avatar>
+  <span class="label">
+    <span class="nick">{{ nick }}</span>
+    @if (bunker) {
+      <span class="bunker">{{ unlinked ? 'Bunker (unlinked)' : 'Bunker' }}</span>
+    }
+  </span>
+  <ng-content></ng-content>
+</div>

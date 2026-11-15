@@ -1,0 +1,48 @@
+<div class="stage">
+  <div class="decision">
+    <div class="brand">
+      <img src="gooti.svg" width="18" height="18" alt="" />
+      <span>Gooti</span>
+    </div>
+
+    <div class="body">
+      @if (host) {
+        <p class="host">{{ host }}</p>
+      }
+      <h1>Choose an identity</h1>
+
+      @let sessionData = storage.getBrowserSessionHandler().browserSessionData;
+      @let identities = sessionData?.identities ?? [];
+
+      @if (identities.length === 0) {
+        <p class="empty">
+          This browser has no identity yet. Create one from the extension
+          toolbar, then try the site again.
+        </p>
+      } @else {
+        <p class="hint">
+          This site will use the identity you pick.<br />
+          You can change it later.
+        </p>
+        <div class="rows">
+          @for (identityId of identities; track identityId) {
+            @let identity =
+              $safeNavigationMigration(sessionData?.[`identity_${identityId}`]);
+            @if (identity) {
+              <lib-identity-row
+                [nick]="identity.nick"
+                [pubkey]="identity.pubkey"
+                [color]="identity.color"
+                [bunker]="!!identity.bunker"
+                [unlinked]="!!identity.bunker && !identity.bunker.clientSecretKey"
+                (activate)="onChoose(identity)"
+              ></lib-identity-row>
+            }
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<lib-toast #toast></lib-toast>

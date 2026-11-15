@@ -3,15 +3,17 @@ import {
   BackgroundCommon,
   BrowserSessionData,
   BrowserSyncData,
-  BrowserSyncFlow,
-  GootiMetaData,
+  GOOTI_META_PROPERTIES,
   Identity_DECRYPTED,
   Nip07Method,
   Nip07MethodPolicy,
   Permission_DECRYPTED,
   Permission_ENCRYPTED,
+  recordHasVault,
+  fitPopupBounds,
+  WindowRect,
 } from '@common';
-import { ChromeMetaHandler } from './app/common/data/chrome-meta-handler';
+import { ChromeVaultHandler } from './app/common/data/chrome-vault-handler';
 
 export class ChromeBackgroundCommon extends BackgroundCommon {
   async getBrowserSessionData(): Promise<BrowserSessionData | undefined> {
@@ -24,42 +26,28 @@ export class ChromeBackgroundCommon extends BackgroundCommon {
   }
 
   async getBrowserSyncData(): Promise<BrowserSyncData | undefined> {
-    const gootiMetaHandler = new ChromeMetaHandler();
-    const gootiMetaData =
-      (await gootiMetaHandler.loadFullData()) as GootiMetaData;
+    await new ChromeVaultHandler().retireAccountSync();
 
-    let browserSyncData: BrowserSyncData | undefined;
-
-    if (gootiMetaData.syncFlow === BrowserSyncFlow.NO_SYNC) {
-      browserSyncData = (await chrome.storage.local.get(
-        null,
-      )) as BrowserSyncData;
-    } else if (gootiMetaData.syncFlow === BrowserSyncFlow.BROWSER_SYNC) {
-      browserSyncData = (await chrome.storage.sync.get(
-        null,
-      )) as BrowserSyncData;
+    const data = await chrome.storage.local.get(null);
+    for (const key of GOOTI_META_PROPERTIES) {
+      delete data[key];
     }
 
-    return browserSyncData;
+    if (!recordHasVault(data)) {
+      return undefined;
+    }
+
+    return data as BrowserSyncData;
   }
 
   async savePermissionsToBrowserSyncStorage(
     newPermissions: string[],
     newPermission: Permission_ENCRYPTED,
   ): Promise<void> {
-    const gootiMetaHandler = new ChromeMetaHandler();
-    const gootiMetaData =
-      (await gootiMetaHandler.loadFullData()) as GootiMetaData;
-
     const data: Record<string, any> = {};
     data['permissions'] = newPermissions;
     data[`permission_${newPermission.id}`] = newPermission;
-
-    if (gootiMetaData.syncFlow === BrowserSyncFlow.NO_SYNC) {
-      await chrome.storage.local.set(data);
-    } else if (gootiMetaData.syncFlow === BrowserSyncFlow.BROWSER_SYNC) {
-      await chrome.storage.sync.set(data);
-    }
+    await chrome.storage.local.set(data);
   }
 
   async storePermission(
@@ -84,36 +72,49 @@ export class ChromeBackgroundCommon extends BackgroundCommon {
       kind,
     };
 
-    // Store session data
+    // Keep the id on this object so the next permission on the same card is kept.
+    browserSessionData.permissions = [
+      ...browserSessionData.permissions,
+      permission.id,
+    ];
     await chrome.storage.session.set({
-      permissions: [...browserSessionData.permissions, permission.id],
+      permissions: browserSessionData.permissions,
     });
     await chrome.storage.session.set({
       [`permission_${permission.id}`]: permission,
     });
 
-    // Encrypt permission to store in sync storage (depending on sync flow).
+    if (!browserSessionData.salt || !browserSessionData.vaultPassword) {
+      throw new Error('Vault key material is missing.');
+    }
     const encryptedPermission = await this.encryptPermission(
       permission,
-      browserSessionData.iv,
-      browserSessionData.vaultPassword as string,
+      browserSessionData.vaultPassword,
+      browserSessionData.salt,
     );
 
     await this.savePermissionsToBrowserSyncStorage(
       [...browserSyncData.permissions, encryptedPermission.id],
       encryptedPermission,
     );
+
+    const sealedBackup = await this.stampStoredPermission(browserSessionData, identity, {
+      host,
+      method,
+      methodPolicy,
+      kind,
+    });
+    if (sealedBackup) {
+      await chrome.storage.session.set({ backupState: browserSessionData.backupState });
+      await chrome.storage.local.set({ backupState: sealedBackup });
+      if (browserSessionData.backupState?.autoBackup) {
+        this.scheduleQuietBackup();
+      }
+    }
   }
 
-  async getPosition(
-    width: number,
-    height: number,
-  ): Promise<{
-    left: number;
-    top: number;
-  }> {
-    let left = 0;
-    let top = 0;
+  async getPosition(width: number, height: number) {
+    let anchor: WindowRect | undefined;
 
     try {
       const lastFocused = await chrome.windows.getLastFocused();
@@ -125,9 +126,12 @@ export class ChromeBackgroundCommon extends BackgroundCommon {
         lastFocused.width !== undefined &&
         lastFocused.height !== undefined
       ) {
-        // Position window in the center of the lastFocused window
-        top = Math.round(lastFocused.top + (lastFocused.height - height) / 2);
-        left = Math.round(lastFocused.left + (lastFocused.width - width) / 2);
+        anchor = {
+          left: lastFocused.left,
+          top: lastFocused.top,
+          width: lastFocused.width,
+          height: lastFocused.height,
+        };
       } else {
         console.error('Last focused window properties are undefined.');
       }
@@ -135,9 +139,30 @@ export class ChromeBackgroundCommon extends BackgroundCommon {
       console.error('Error getting window position:', error);
     }
 
-    return {
-      top,
-      left,
-    };
+    return fitPopupBounds(width, height, anchor, await readWorkAreas());
+  }
+}
+
+async function readWorkAreas(): Promise<WindowRect[]> {
+  try {
+    const displays = await chrome.system.display.getInfo();
+    return displays.flatMap((display) => {
+      const area =
+        display.workArea.width > 0 ? display.workArea : display.bounds;
+      if (area.width <= 0 || area.height <= 0) {
+        return [];
+      }
+      return [
+        {
+          left: area.left,
+          top: area.top,
+          width: area.width,
+          height: area.height,
+        },
+      ];
+    });
+  } catch (error) {
+    console.error('Error reading screen work areas:', error);
+    return [];
   }
 }

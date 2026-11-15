@@ -1,4 +1,10 @@
-import { AfterViewInit, Component, EventEmitter, Output } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  EventEmitter,
+  Output,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import * as bootstrap from 'bootstrap';
 
 @Component({
@@ -6,6 +12,7 @@ import * as bootstrap from 'bootstrap';
   selector: 'lib-confirm',
   imports: [],
   templateUrl: './confirm.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './confirm.component.scss',
 })
 export class ConfirmComponent implements AfterViewInit {
@@ -13,6 +20,9 @@ export class ConfirmComponent implements AfterViewInit {
   @Output() no = new EventEmitter<void>();
 
   message: string | undefined;
+  title = 'Please confirm';
+  yesLabel = 'Yes';
+  showNo = true;
   onYes: ((() => Promise<void>) | (() => void)) | undefined;
   modal: bootstrap.Modal | undefined;
 
@@ -35,8 +45,24 @@ export class ConfirmComponent implements AfterViewInit {
   }
 
   show(message: string, onYes: (() => Promise<void>) | (() => void)): void {
+    this.title = 'Please confirm';
+    this.yesLabel = 'Yes';
+    this.showNo = true;
     this.message = message;
     this.onYes = onYes;
+    this.modal?.show();
+  }
+
+  inform(
+    message: string,
+    onOk: (() => Promise<void>) | (() => void),
+    title = 'Info',
+  ): void {
+    this.title = title;
+    this.yesLabel = 'OK';
+    this.showNo = false;
+    this.message = message;
+    this.onYes = onOk;
     this.modal?.show();
   }
 }

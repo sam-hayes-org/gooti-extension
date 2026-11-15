@@ -1,0 +1,178 @@
+<p class="kicker">Backup</p>
+
+<p class="copy">
+  Gooti keeps an encrypted backup of your identities on your relays. Your passphrase locks and unlocks
+  it. Enter the same passphrase in Gooti on another browser or in Gooti Desktop, and they share your identities.
+</p>
+
+@if (phase() === 'locked') {
+<p class="copy">Unlock Gooti to set up backup.</p>
+}
+
+@if (phase() === 'offer' || phase() === 'restore' || phase() === 'phrase') {
+<button type="button" class="primary" (click)="onEnable()" [disabled]="busy">
+  Create passphrase
+</button>
+}
+
+@if (phase() === 'ready') {
+<div class="meter">
+  <p class="label">Backup size</p>
+  <div class="meter-readout">
+    <span class="used" [class.over]="vaultOver">{{ vaultUsed }}</span>
+    <span class="room">of 1 MB</span>
+  </div>
+  <div
+    class="track"
+    role="meter"
+    [attr.aria-valuenow]="vaultChars"
+    aria-valuemin="0"
+    [attr.aria-valuemax]="vaultLimit"
+    [attr.aria-valuetext]="vaultUsed + ' of 1 MB'"
+  >
+    <div class="fill" [class.over]="vaultOver" [style.width.%]="vaultPercent"></div>
+  </div>
+  @if (vaultOver) {
+  <p class="copy over">A backup cannot be larger than 1 MB.</p>
+  }
+</div>
+<button type="button" class="primary" (click)="onBackUp()" [disabled]="busy">
+  Back up now
+</button>
+<div class="auto-row">
+  <label class="copy check">
+    <input type="checkbox" [checked]="autoBackup" (change)="onAutoBackup($event)" [disabled]="busy" />
+    Back up automatically
+  </label>
+  <span class="info">
+    <button type="button" class="info-btn" aria-label="What does automatic backup do?" [attr.aria-describedby]="autoTipId">
+      <i class="bi bi-info-circle"></i>
+    </button>
+    <span class="tip" role="tooltip" [id]="autoTipId">
+      Gooti backs up when you open it and after each change on this browser, and takes in changes from your
+      other devices. Back up now does the same at once. With this off, Gooti backs up only when you press
+      Back up now.
+    </span>
+  </span>
+</div>
+<label class="label">Relays</label>
+<textarea class="form-control" rows="3" [value]="relays" (input)="relays = asText($event)"></textarea>
+<button type="button" class="quiet" (click)="onSaveRelays(toast)" [disabled]="busy">
+  Save relays
+</button>
+}
+
+@if (error && phase() !== 'restore' && phase() !== 'phrase') {
+<span class="text-danger">{{ error }}</span>
+}
+
+<lib-toast #toast></lib-toast>
+
+<div [id]="phraseDialogId" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Your passphrase</h5>
+        <button type="button" class="btn-close" (click)="onDiscardPhrase()"></button>
+      </div>
+      <div class="modal-body sam-flex-column gap-h">
+        <p class="copy">
+          These 12 words open your backup on Nostr relays. Anyone who has them can take every identity in it.
+          Write them down and keep them safe. Without them you cannot restore your identities on another
+          device, and nobody can recover them for you. They are different from your Gooti password.
+        </p>
+        <div class="phrase-line">
+          <span class="phrase">{{ leave.phrase }}</span>
+          <lib-icon-button icon="copy" (click)="copyPhrase(); toast.show('Copied to clipboard')"></lib-icon-button>
+        </div>
+        <label class="copy">
+          <input type="checkbox" [checked]="savedWords" (change)="onSavedWords($event)" />
+          I have written these words down
+        </label>
+        @if (error) {
+        <span class="text-danger">{{ error }}</span>
+        }
+      </div>
+      <div class="modal-footer">
+        <div class="pair">
+          <button type="button" class="primary" (click)="onSavePhrase(toast)" [disabled]="busy || !savedWords">
+            Turn on backup
+          </button>
+          <button type="button" class="quiet" (click)="onDiscardPhrase()" [disabled]="busy">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div [id]="restoreDialogId" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Use an existing backup</h5>
+        <button type="button" class="btn-close" (click)="onCancelRestore()"></button>
+      </div>
+      <div class="modal-body sam-flex-column gap-h">
+        <p class="copy">
+          Enter the 12 words you wrote down when you turned on backup. The backup is merged with the
+          identities on this browser.
+        </p>
+        <label class="label">Relays</label>
+        <textarea class="form-control" rows="3" [value]="relays" (input)="relays = asText($event)"></textarea>
+        <textarea class="form-control" rows="3" [value]="phraseInput" (input)="phraseInput = asText($event)"
+          placeholder="12 words"></textarea>
+        @if (error) {
+        <span class="text-danger">{{ error }}</span>
+        }
+      </div>
+      <div class="modal-footer">
+        <div class="pair">
+          <button type="button" class="primary" (click)="onRestore(toast)" [disabled]="busy">
+            Restore from backup
+          </button>
+          <button type="button" class="quiet" (click)="onCancelRestore()" [disabled]="busy">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div [id]="backupDialogId" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Back up now</h5>
+      </div>
+      <div class="modal-body sam-flex-column gap-h">
+        @for (line of backupLines; track $index) {
+        <div class="backup-step">
+          @if (line.active) {
+          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          } @else {
+          <i class="bi bi-check"></i>
+          }
+          <span>{{ line.text }}</span>
+        </div>
+        }
+        @if (backupError) {
+        <span class="text-danger">{{ backupError }}</span>
+        @for (failure of backupFailures; track $index) {
+        <p class="relay-failure">
+          <span class="url">{{ failure.url }}</span>
+          <span class="reason">{{ failure.reason }}</span>
+        </p>
+        }
+        }
+      </div>
+      @if (backupDone) {
+      <div class="modal-footer">
+        <button type="button" class="action primary" (click)="closeBackup()">Close</button>
+      </div>
+      }
+    </div>
+  </div>
+</div>
