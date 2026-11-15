@@ -2,6 +2,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-15
+
 Version 2.0.0 is a rewrite. The entries below describe the difference to 1.0.0.
 
 ### Added
@@ -83,6 +85,7 @@ Version 2.0.0 is a rewrite. The entries below describe the difference to 1.0.0.
 ## [chrome-0.0.1] - 2025-02-01
 
 
+[2.0.0]: https://github.com/sam-hayes-org/gooti-extension/compare/chrome-1.0.0...chrome-2.0.0
 [1.0.0]: https://github.com/sam-hayes-org/gooti-extension/compare/chrome-0.0.4...chrome-1.0.0
 [chrome-0.0.4]: https://github.com/sam-hayes-org/gooti-extension/compare/chrome-0.0.3...chrome-0.0.4
 [chrome-0.0.3]: https://github.com/sam-hayes-org/gooti-extension/compare/chrome-0.0.2...chrome-0.0.3
