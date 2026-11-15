@@ -1,85 +1,138 @@
 <div class="sam-text-header">
-  <span>New Identity</span>
+  <span>New identity</span>
 </div>
 
 <div class="content">
-  <input
-    id="nickElement"
-    type="text"
-    placeholder="Nick"
-    class="form-control form-control-lg"
-    style="font-size: 1rem"
-    [(ngModel)]="identity.nick"
-    autocomplete="off"
-    (ngModelChange)="validateCanSave()"
-  />
+  @if (pendingBunker) {
+    <p class="copy">The bunker approved this browser. Nothing is saved yet.</p>
+    <div class="signing-card">
+      <div class="kicker">Signing as</div>
+      <div class="npub">{{ signingNpub() }}</div>
+      @if (nip05Check === 'match') {
+        <div class="match">This is the key for {{ checkedAddress }}.</div>
+      } @else if (nip05Check === 'mismatch') {
+        <div class="mismatch">This is not the key for {{ checkedAddress }}.</div>
+      } @else if (nip05Check === 'unchecked') {
+        <p class="copy check-note">
+          That address could not be checked. Compare the key yourself.
+        </p>
+      }
+    </div>
+    <p class="copy sam-mt">
+      Sites will see this key. If you do not recognize it, go back.
+    </p>
+  } @else {
+    <div class="sam-field">
+      <input
+        id="nickElement"
+        type="text"
+        placeholder="Nick"
+        [(ngModel)]="identity.nick"
+        autocomplete="off"
+        (ngModelChange)="validateCanSave()"
+      />
+    </div>
 
-  <div class="sam-mt input-group mb-3">
-    <input
-      id="privkeyInputElement"
-      #privkeyInputElement
-      type="password"
-      placeholder="Private Key (HEX or NSEC)"
-      class="form-control form-control-lg"
-      style="font-size: 1rem"
-      [(ngModel)]="identity.privkeyInput"
-      autocomplete="off"
-      (ngModelChange)="validateCanSave()"
-    />
-    <button
-      class="btn btn-outline-secondary"
-      type="button"
-      (click)="toggleType(privkeyInputElement)"
-    >
-      <i
-        class="bi bi-eye"
-        [class.bi-eye]="privkeyInputElement.type === 'password'"
-        [class.bi-eye-slash]="privkeyInputElement.type === 'text'"
-      ></i>
+    @if (!bunkerMode) {
+      <div class="sam-field">
+        <input
+          id="privkeyInputElement"
+          #privkeyInputElement
+          type="password"
+          placeholder="Private key (hex or nsec)"
+          [(ngModel)]="identity.privkeyInput"
+          autocomplete="off"
+          (ngModelChange)="validateCanSave()"
+        />
+        <button
+          class="icon"
+          type="button"
+          (click)="toggleType(privkeyInputElement)"
+        >
+          <i
+            class="bi"
+            [class.bi-eye]="privkeyInputElement.type === 'password'"
+            [class.bi-eye-slash]="privkeyInputElement.type === 'text'"
+          ></i>
+        </button>
+      </div>
+
+      <button
+        class="sam-text-link"
+        (click)="onClickGeneratePrivkey()"
+        type="button"
+      >
+        Generate private key
+      </button>
+    } @else {
+      <textarea
+        id="bunkerLink"
+        class="sam-box"
+        rows="4"
+        placeholder="bunker:// link"
+        [(ngModel)]="identity.bunkerLink"
+        (ngModelChange)="validateCanSave()"
+        [disabled]="busy"
+      ></textarea>
+      <p class="copy sam-mt">
+        Paste the link from your bunker. The browser forwards requests to the
+        bunker. The private key stays in the bunker.
+      </p>
+      <div class="address-label">Nostr address (optional)</div>
+      <div class="sam-field">
+        <input
+          type="text"
+          placeholder="name@domain"
+          [(ngModel)]="identity.nostrAddress"
+          autocomplete="off"
+          [disabled]="busy"
+        />
+      </div>
+      <p class="copy sam-mt">
+        After the bunker answers, Gooti checks that the key matches this address.
+      </p>
+      @if (busy) {
+        <p class="copy sam-mt sam-flex-row gap-h" role="status">
+          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          <span>Waiting for the bunker to approve this browser.</span>
+        </p>
+      }
+    }
+
+    <button class="sam-text-link" type="button" [disabled]="busy" (click)="toggleBunker()">
+      {{ bunkerMode ? 'Use a private key' : 'Use a bunker' }}
     </button>
-  </div>
-
-  <button
-    class="sam-mt"
-    (click)="onClickGeneratePrivkey()"
-    type="button"
-    class="btn btn-link"
-  >
-    Generate private key
-  </button>
+  }
 </div>
+
+@if (alertMessage) {
+  <p class="sam-error banner" role="alert">{{ alertMessage }}</p>
+}
 
 <div class="sam-footer-grid-2">
-  <button type="button" class="btn btn-secondary" (click)="navigateBack()">
-    Cancel
-  </button>
-
-  <button
-    [disabled]="!canSave"
-    type="button"
-    class="btn btn-primary"
-    (click)="onClickSave()"
-  >
-    Save
-  </button>
+  @if (pendingBunker) {
+    <button type="button" class="action quiet" [disabled]="busy" (click)="onClickBack()">
+      Back
+    </button>
+    <button
+      type="button"
+      class="action primary"
+      [disabled]="busy || nip05Check === 'mismatch'"
+      (click)="onClickUseKey()"
+    >
+      Use this key
+    </button>
+  } @else {
+    <button type="button" class="action quiet" (click)="navigateBack()">
+      Cancel
+    </button>
+    <button
+      [disabled]="!canSave || busy"
+      type="button"
+      class="action primary"
+      (click)="onClickSave()"
+    >
+      {{ busy ? 'Waiting for the bunker…' : bunkerMode ? 'Connect' : 'Save' }}
+    </button>
+  }
 </div>
-
-<!----------->
-<!-- ALERT -->
-<!----------->
-@if(alertMessage) {
-<div
-  style="
-    position: absolute;
-    bottom: 60px;
-    align-self: center;
-    margin-left: 16px;
-    margin-right: 16px;
-  "
->
-  <div class="alert alert-danger sam-flex-row gap" role="alert">
-    <i class="bi bi-exclamation-triangle"></i>
-    <span>{{ alertMessage }}</span>
-  </div>
-</div>
-}

@@ -1,9 +1,17 @@
-import { Component, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import {
   IconButtonComponent,
   Identity_DECRYPTED,
+  isHomeRoute,
+  pathOnly,
+  readLastRoute,
   sleep,
   StorageService,
 } from '@common';
@@ -12,6 +20,7 @@ import {
   selector: 'app-edit-identity',
   templateUrl: './edit-identity.component.html',
   styleUrl: './edit-identity.component.scss',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterOutlet, IconButtonComponent, FormsModule],
 })
 export class EditIdentityComponent implements OnInit {
@@ -74,9 +83,17 @@ export class EditIdentityComponent implements OnInit {
   }
 
   onClickCancel() {
-    if (!this.previousRoute) {
+    const path = pathOnly(this.#router.url);
+    const section = /^\/edit-identity\/([^/]+)\/(?:keys|permissions)$/.exec(path);
+    if (section) {
+      void this.#router.navigateByUrl(`/edit-identity/${section[1]}/home`);
       return;
     }
-    this.#router.navigateByUrl(this.previousRoute);
+
+    const previous = this.previousRoute ? pathOnly(this.previousRoute) : '';
+    const target = isHomeRoute(previous)
+      ? previous
+      : (readLastRoute()?.returnTo ?? '/home/identities');
+    void this.#router.navigateByUrl(target);
   }
 }

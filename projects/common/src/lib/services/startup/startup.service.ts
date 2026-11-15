@@ -1,15 +1,26 @@
 import { inject, Injectable } from '@angular/core';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { LoggerService } from '../logger/logger.service';
 import {
   StorageService,
   StorageServiceConfig,
 } from '../storage/storage.service';
+import {
+  isHomeRoute,
+  isRestorableRoute,
+  pathOnly,
+  readLastRoute,
+  resolveOpeningRoute,
+  touchLastRoute,
+  writeLastRoute,
+} from './last-route';
 
 export type StartupSource = 'background' | 'click';
 export interface StartupDetails {
   source: StartupSource;
   id?: string;
+  /** Website host. Set only for the window a site opened. */
+  host?: string;
 }
 
 @Injectable({
@@ -22,6 +33,9 @@ export class StartupService {
   #startupDetails: StartupDetails = {
     source: 'click',
   };
+  #listening = false;
+  #rememberRoutes = false;
+  #returnTo?: string;
 
   get startupDetails(): StartupDetails {
     return this.#startupDetails;
@@ -29,23 +43,23 @@ export class StartupService {
 
   async startOver(storageConfig: StorageServiceConfig, details: StartupDetails) {
     this.#startupDetails = details;
+    this.#rememberRoutes = details.source === 'click';
+    this.#returnTo = readLastRoute()?.returnTo;
+    this.#listenForRoutes();
     this.#storage.initialize(storageConfig);
 
-    // Step 0:
-    storageConfig.browserSyncNoHandler.setIgnoreProperties(
+    storageConfig.vaultHandler.setIgnoreProperties(
       storageConfig.gootiMetaHandler.metaProperties,
     );
 
-    // Step 1: Load the gooti's user settings
-    const gootiMetaData = await this.#storage.loadGootiMetaData();
-    if (typeof gootiMetaData?.syncFlow === 'undefined') {
-      // Very first run. The user has not set up Gooti yet.
-      this.#router.navigateByUrl('/welcome');
-      return;
+    try {
+      await storageConfig.vaultHandler.retireAccountSync();
+    } catch (error) {
+      this.#logger.log(`Could not retire browser account sync: ${error}`);
     }
-    this.#storage.enableBrowserSyncFlow(gootiMetaData.syncFlow);
 
-    // Load the browser session data.
+    await this.#storage.loadGootiMetaData();
+
     const browserSessionData = await this.#storage.loadBrowserSessionData();
 
     if (!browserSessionData) {
@@ -84,12 +98,49 @@ export class StartupService {
     // Also load the browser sync data. This is needed, if the user adds or deletes anything.
     await this.#storage.loadAndMigrateBrowserSyncData();
 
-    const selectedIdentityId =
-      this.#storage.getBrowserSessionHandler().browserSessionData
-        ?.selectedIdentityId;
+    // An upgrade while the vault is already unlocked never passes through the login screen.
+    const vault = this.#storage.getVaultHandler().browserSyncData;
+    let session = this.#storage.getBrowserSessionHandler().browserSessionData;
+    if (vault && vault.version < 3 && session?.vaultPassword) {
+      await this.#storage.persistVaultV3();
+      session = this.#storage.getBrowserSessionHandler().browserSessionData;
+    }
 
-    this.#router.navigateByUrl(
-      `/home/${selectedIdentityId ? 'identity' : 'identities'}`,
+    // The website window only asks which identity that site should use.
+    // The toolbar popup returns to the screen from the last five minutes.
+    if (!this.#rememberRoutes) {
+      await this.#router.navigateByUrl('/choose-identity');
+      return;
+    }
+    const saved = readLastRoute();
+
+    void this.#router.navigateByUrl(
+      resolveOpeningRoute(saved, Date.now(), session?.identities ?? []),
     );
+    this.#storage.queueQuietBackup();
+  }
+
+  #listenForRoutes(): void {
+    if (this.#listening) {
+      return;
+    }
+    this.#listening = true;
+    this.#router.events.subscribe((event) => {
+      if (!(event instanceof NavigationEnd) || !this.#rememberRoutes) {
+        return;
+      }
+      const path = pathOnly(event.urlAfterRedirects);
+      if (isHomeRoute(path)) {
+        this.#returnTo = path;
+      }
+      if (isRestorableRoute(path)) {
+        writeLastRoute(path, Date.now(), this.#returnTo);
+      }
+    });
+    window.addEventListener('beforeunload', () => {
+      if (this.#rememberRoutes) {
+        touchLastRoute();
+      }
+    });
   }
 }

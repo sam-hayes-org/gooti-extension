@@ -1,4 +1,9 @@
-import { Component, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   ConfirmComponent,
@@ -11,6 +16,7 @@ import {
   selector: 'app-edit-identity-home',
   imports: [NavItemComponent, ConfirmComponent],
   templateUrl: './home.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.component.scss',
 })
 export class HomeComponent implements OnInit {
@@ -29,7 +35,7 @@ export class HomeComponent implements OnInit {
     this.#initialize(identityId);
   }
 
-  onClickNavigateTo(destination: 'keys' | 'permissions' | 'relays') {
+  onClickNavigateTo(destination: 'keys' | 'permissions') {
     this.#router.navigateByUrl(
       `/edit-identity/${this.identity?.id}/${destination}`,
     );

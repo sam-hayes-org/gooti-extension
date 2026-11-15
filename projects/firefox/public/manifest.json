@@ -2,11 +2,12 @@
   "manifest_version": 3,
   "name": "Gooti",
   "description": "Nostr Identity Manager & Signer",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "homepage_url": "https://getgooti.com",
   "options_page": "options.html",
   "permissions": [
-    "storage"
+    "storage",
+    "activeTab"
   ],
   "action": {
     "default_popup": "index.html",
@@ -35,7 +36,11 @@
         "gooti-extension.js"
       ],
       "matches": [
-        "<all_urls>"
+        "https://*/*",
+        "http://localhost/*",
+        "http://0.0.0.0/*",
+        "http://127.0.0.1/*",
+        "http://*.localhost/*"
       ]
     }
   ],
