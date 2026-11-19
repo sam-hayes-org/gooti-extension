@@ -11,13 +11,12 @@
       }
       <h1>Choose an identity</h1>
 
-      @let sessionData = storage.getBrowserSessionHandler().browserSessionData;
-      @let identities = sessionData?.identities ?? [];
+      @let identities = regularIdentities;
 
       @if (identities.length === 0) {
         <p class="empty">
-          This browser has no identity yet. Create one from the extension
-          toolbar, then try the site again.
+          This browser has no identity yet. Make one just for this site, or
+          create one from the extension toolbar and try the site again.
         </p>
       } @else {
         <p class="hint">
@@ -25,21 +24,29 @@
           You can change it later.
         </p>
         <div class="rows">
-          @for (identityId of identities; track identityId) {
-            @let identity =
-              $safeNavigationMigration(sessionData?.[`identity_${identityId}`]);
-            @if (identity) {
-              <lib-identity-row
-                [nick]="identity.nick"
-                [pubkey]="identity.pubkey"
-                [color]="identity.color"
-                [bunker]="!!identity.bunker"
-                [unlinked]="!!identity.bunker && !identity.bunker.clientSecretKey"
-                (activate)="onChoose(identity)"
-              ></lib-identity-row>
-            }
+          @for (identity of identities; track identity.id) {
+            <lib-identity-row
+              [nick]="identity.nick"
+              [pubkey]="identity.pubkey"
+              [color]="identity.color"
+              [bunker]="!!identity.bunker"
+              [unlinked]="storage.bunkerUnlinked(identity)"
+              (activate)="onChoose(identity)"
+            ></lib-identity-row>
           }
         </div>
+      }
+
+      @if (host) {
+        <button
+          type="button"
+          class="new-site-identity"
+          [disabled]="busy"
+          (click)="onNewSiteIdentity()"
+        >
+          <i class="bi bi-plus-lg"></i>
+          <span>New site-only identity</span>
+        </button>
       }
     </div>
   </div>

@@ -9,6 +9,10 @@
   </button>
 </div>
 
+@if (!fromBackground) {
+  <lib-desktop-pairing></lib-desktop-pairing>
+}
+
 @let sessionData = storage.getBrowserSessionHandler().browserSessionData;
 @let identities = sessionData?.identities ?? [];
 @let site = siteIdentity;
@@ -34,7 +38,7 @@
     [pubkey]="site.pubkey"
     [color]="site.color"
     [bunker]="!!site.bunker"
-    [unlinked]="!!site.bunker && !site.bunker.clientSecretKey"
+    [unlinked]="storage.bunkerUnlinked(site)"
     (activate)="onClickSiteIdentity(site)"
   >
     @if (host && !fromBackground) {
@@ -53,19 +57,39 @@
     </span>
   </div>
 }
-@for (identityId of identities; track identityId) {
-  @let identity =
-    $safeNavigationMigration(sessionData?.[`identity_${identityId}`]);
-  @if (identity && identity.id !== site?.id) {
+@let groups = identityGroups;
+@let siteOnly = groups.site;
+@let grouped = siteOnly.length > 0;
+<!-- With both groups, the identity in use is listed in its own group too, so it shows which kind it is. -->
+@let regular = grouped ? groups.regular : groups.regular.filter(byNotCurrent(site?.id));
+
+@if (grouped && regular.length > 0) {
+  <div class="group-head">
+    <button
+      type="button"
+      class="group-toggle"
+      [attr.aria-expanded]="regularOpen"
+      (click)="regularOpen = !regularOpen"
+    >
+      <i class="bi" [class.bi-chevron-right]="!regularOpen" [class.bi-chevron-down]="regularOpen"></i>
+      <span>Regular identities</span>
+    </button>
+    <span class="count">{{ regular.length }}</span>
+  </div>
+}
+@if (!grouped || regularOpen) {
+  @for (identity of regular; track identity.id) {
     <lib-identity-row
       [nick]="identity.nick"
       [pubkey]="identity.pubkey"
       [color]="identity.color"
       [bunker]="!!identity.bunker"
-      [unlinked]="!!identity.bunker && !identity.bunker.clientSecretKey"
+      [unlinked]="storage.bunkerUnlinked(identity)"
       (activate)="onClickEditIdentity(identity)"
     >
-      @if (host) {
+      @if (identity.id === site?.id) {
+        <span class="here">Used here</span>
+      } @else if (host) {
         <button
           type="button"
           class="use"
@@ -75,6 +99,54 @@
         </button>
       }
     </lib-identity-row>
+  }
+}
+
+@if (grouped) {
+  <div class="group-head">
+    <button
+      type="button"
+      class="group-toggle"
+      [attr.aria-expanded]="siteIdentitiesOpen"
+      (click)="siteIdentitiesOpen = !siteIdentitiesOpen"
+    >
+      <i class="bi" [class.bi-chevron-right]="!siteIdentitiesOpen" [class.bi-chevron-down]="siteIdentitiesOpen"></i>
+      <span>Site-only identities</span>
+    </button>
+    <span class="info">
+      <button type="button" class="info-btn" aria-label="What are site-only identities?" [attr.aria-describedby]="siteTipId">
+        <i class="bi bi-info-circle"></i>
+      </button>
+      <span class="tip" role="tooltip" [id]="siteTipId">
+        Each identity was created with "New site-only identity" for a specific website to test that site
+        without your regular identities. Delete them when you are done or choose to keep them as regular
+        identities.
+      </span>
+    </span>
+    <span class="count">{{ siteOnly.length }}</span>
+  </div>
+  @if (siteIdentitiesOpen) {
+    @for (identity of siteOnly; track identity.id) {
+      <lib-identity-row
+        [nick]="identity.nick"
+        [pubkey]="identity.pubkey"
+        [color]="identity.color"
+        [note]="lastUsed(identity)"
+        (activate)="onClickEditIdentity(identity)"
+      >
+        @if (identity.id === site?.id) {
+          <span class="here">Used here</span>
+        } @else if (host && identity.site === host) {
+          <button
+            type="button"
+            class="use"
+            (click)="onClickUse(identity.id, $event)"
+          >
+            Use
+          </button>
+        }
+      </lib-identity-row>
+    }
   }
 }
 

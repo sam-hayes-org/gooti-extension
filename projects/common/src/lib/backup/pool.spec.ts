@@ -76,6 +76,19 @@ describe('sync relay pool', () => {
     expect(pool.closed.length).toBe(1);
   });
 
+  it('returns this device\'s records with the newest blob, from the same request', async () => {
+    const shared = { id: 's', created_at: 10, tags: [['d', 'gooti-shared']] } as Event;
+    const mine = { id: 'm', created_at: 30, tags: [['d', 'gooti-device:ab']] } as Event;
+    const pool = fakePool({ 'wss://a.example': { events: [shared, mine] } });
+    const io = backupRelayIO(pool);
+
+    const found = await io.fetchNewestAlso(['wss://a.example'], 'aa'.repeat(32), 'gooti-device:ab');
+
+    expect(found.newest?.id).toBe('s');
+    expect(found.also.map((event) => event.id)).toEqual(['m']);
+    expect(pool.closed.length).toBe(1);
+  });
+
   it('returns null when every relay answers with no blob', async () => {
     const pool = fakePool({
       'wss://one.example': { events: [] },

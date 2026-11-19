@@ -18,8 +18,15 @@ export async function sealSharedDocument(
   encryptionKey: Uint8Array,
 ): Promise<string> {
   assertSharedDocument(document);
+  return sealPlaintext(sharedPlaintext(document), encryptionKey);
+}
+
+/** Seals any plaintext the same way. Device records use it too. */
+export async function sealPlaintext(
+  plaintext: Uint8Array<ArrayBuffer>,
+  encryptionKey: Uint8Array,
+): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const plaintext = sharedPlaintext(document);
   const ciphertext = new Uint8Array(
     await crypto.subtle.encrypt(
       { name: 'AES-GCM', iv },
@@ -70,6 +77,26 @@ export async function openSharedDocument(
   payload: string,
   encryptionKey: Uint8Array,
 ): Promise<SharedDocument | null> {
+  const plaintext = await openPlaintext(payload, encryptionKey);
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(new TextDecoder().decode(plaintext));
+  } catch {
+    throw new Error('Invalid sync blob.');
+  }
+  if (isNewerDocument(parsed)) {
+    throw new Error(NEWER_BACKUP);
+  }
+  if (isOldDocument(parsed)) {
+    return null;
+  }
+  assertSharedDocument(parsed);
+  return parsed;
+}
+
+/** Throws when the key is wrong or the blob was edited. */
+export async function openPlaintext(payload: string, encryptionKey: Uint8Array): Promise<ArrayBuffer> {
   let packed: Uint8Array;
   try {
     packed = new Uint8Array(Buffer.from(payload, 'base64'));
@@ -92,21 +119,7 @@ export async function openSharedDocument(
   } catch {
     throw new Error('Invalid sync blob.');
   }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(new TextDecoder().decode(plaintext));
-  } catch {
-    throw new Error('Invalid sync blob.');
-  }
-  if (isNewerDocument(parsed)) {
-    throw new Error(NEWER_BACKUP);
-  }
-  if (isOldDocument(parsed)) {
-    return null;
-  }
-  assertSharedDocument(parsed);
-  return parsed;
+  return plaintext;
 }
 
 /** A document of the format before this one. It is replaced by the current one. */

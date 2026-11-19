@@ -21,7 +21,7 @@ const nick = params.get('nick') as string;
 const bunker = params.get('bunker') === '1';
 const cardMode = params.get('card') === '1';
 const notice = params.get('notice');
-const noticeMode = notice === 'desktop' || notice === 'bunker';
+const noticeMode = notice === 'desktop' || notice === 'bunker' || notice === 'disconnected' || notice === 'allow';
 
 const titleSpanElement = document.getElementById('titleSpan');
 
@@ -137,18 +137,37 @@ function applyCard(snapshot: PermissionCardSnapshot) {
     .catch(() => undefined);
 }
 
-/** The background opens this when a bunker did not answer. Nothing to approve. */
-function showNotice(which: 'desktop' | 'bunker') {
+/**
+ * The background opens this when a site's request failed in a way the site may not show: a bunker
+ * did not answer, or Gooti Desktop disconnected this browser or has not allowed it yet. For the
+ * last two it offers to ask Gooti Desktop again.
+ */
+function showNotice(which: 'desktop' | 'bunker' | 'disconnected' | 'allow') {
   showOnly('');
   document.title = 'Gooti';
-  setTitle(which === 'desktop' ? 'Gooti Desktop did not answer' : 'Your bunker did not answer');
+  const site = params.get('host') || 'A site';
+  const nick = params.get('nick');
+  const failed = nick ? `${site} could not sign as ${nick}` : `${site} could not sign`;
+  const titles = {
+    desktop: 'Gooti Desktop did not answer',
+    bunker: 'Your bunker did not answer',
+    disconnected: 'Gooti Desktop disconnected this browser',
+    allow: 'Allow this browser in Gooti Desktop',
+  };
+  const texts = {
+    desktop: 'Open Gooti Desktop and unlock it, then try again on the site.',
+    bunker: 'Check that your bunker app is open, then try again on the site.',
+    disconnected: `${failed}. Connect again, then allow this browser on Gooti Desktop.`,
+    allow: `${failed}: Gooti Desktop has not allowed this browser yet.`,
+  };
+  setTitle(titles[which]);
   const text = document.getElementById('noticeText');
   if (text) {
-    text.innerText =
-      which === 'desktop'
-        ? 'Open Gooti Desktop and unlock it, then try again on the site.'
-        : 'Check that your bunker app is open, then try again on the site.';
+    text.innerText = texts[which];
     text.hidden = false;
+  }
+  if (which === 'disconnected' || which === 'allow') {
+    offerConnect(which === 'disconnected', text);
   }
   for (const elementId of ['signer', 'requestActions']) {
     const element = document.getElementById(elementId);
@@ -161,6 +180,39 @@ function showNotice(which: 'desktop' | 'bunker') {
     actions.hidden = false;
   }
   document.getElementById('noticeOkButton')?.addEventListener('click', () => window.close());
+}
+
+/** "Connect again": the background asks Gooti Desktop, and this window shows the code to look for. */
+function offerConnect(fresh: boolean, text: HTMLElement | null) {
+  const action = document.getElementById('noticeConnectAction');
+  const button = document.getElementById('noticeConnectButton') as HTMLButtonElement | null;
+  const ok = document.getElementById('noticeOkButton');
+  if (!action || !button) {
+    return;
+  }
+  button.innerText = fresh ? 'Connect again' : 'Ask Gooti Desktop';
+  action.hidden = false;
+  if (ok) {
+    ok.classList.replace('approve', 'reject');
+    ok.innerText = 'Close';
+  }
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    const answer = (await browser.runtime
+      .sendMessage({ type: 'connect-desktop-again', fresh })
+      .catch(() => undefined)) as { code?: unknown } | undefined;
+    action.hidden = true;
+    if (ok) {
+      ok.classList.replace('reject', 'approve');
+      ok.innerText = 'OK';
+    }
+    if (text) {
+      text.innerText =
+        typeof answer?.code === 'string'
+          ? `Allow this browser on Gooti Desktop. Code ${answer.code}: Gooti Desktop shows the same code. Then try again on the site.`
+          : 'Open Gooti in this browser and connect it there.';
+    }
+  });
 }
 
 if (noticeMode) {

@@ -23,7 +23,11 @@ export class ConfirmComponent implements AfterViewInit {
   title = 'Please confirm';
   yesLabel = 'Yes';
   showNo = true;
+  /** A second answer next to Yes (see `choose`). The close button cancels both. */
+  altLabel: string | undefined;
+  yesDanger = false;
   onYes: ((() => Promise<void>) | (() => void)) | undefined;
+  onAlt: ((() => Promise<void>) | (() => void)) | undefined;
   modal: bootstrap.Modal | undefined;
 
   readonly idString = crypto.randomUUID();
@@ -44,12 +48,39 @@ export class ConfirmComponent implements AfterViewInit {
     }
   }
 
+  onClickAlt() {
+    this.modal?.hide();
+    if (typeof this.onAlt !== 'undefined') {
+      this.onAlt();
+    }
+  }
+
   show(message: string, onYes: (() => Promise<void>) | (() => void)): void {
     this.title = 'Please confirm';
     this.yesLabel = 'Yes';
     this.showNo = true;
+    this.altLabel = undefined;
+    this.yesDanger = false;
     this.message = message;
     this.onYes = onYes;
+    this.onAlt = undefined;
+    this.modal?.show();
+  }
+
+  /** Two answers, such as "Keep it" and "Delete it". The close button answers neither. */
+  choose(
+    message: string,
+    alt: { label: string; run: (() => Promise<void>) | (() => void) },
+    yes: { label: string; run: (() => Promise<void>) | (() => void); danger?: boolean },
+  ): void {
+    this.title = 'Please confirm';
+    this.showNo = false;
+    this.message = message;
+    this.altLabel = alt.label;
+    this.onAlt = alt.run;
+    this.yesLabel = yes.label;
+    this.yesDanger = yes.danger === true;
+    this.onYes = yes.run;
     this.modal?.show();
   }
 
@@ -61,6 +92,9 @@ export class ConfirmComponent implements AfterViewInit {
     this.title = title;
     this.yesLabel = 'OK';
     this.showNo = false;
+    this.altLabel = undefined;
+    this.yesDanger = false;
+    this.onAlt = undefined;
     this.message = message;
     this.onYes = onOk;
     this.modal?.show();

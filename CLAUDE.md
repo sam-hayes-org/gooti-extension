@@ -26,6 +26,15 @@ npx ng lint
 Run both builds and the tests after any change. `ng lint` already reports 52 errors that were there before;
 compare the count and make sure a change adds none.
 
+## Relays while building
+
+Build and try new features against the **test relay**, `wss://test.getgooti.com` (same software and
+write policy as relay.getgooti.com; see `../gooti-relay`): enter it as the relay in Settings → Backup of
+the dev build, and in Gooti Desktop when it is part of the test. `wss://relay.getgooti.com` holds the
+backups of real users: publish nothing there while building. A feature that needs the relay to accept
+something new gets its write-policy change on the test relay first (`./deploy.sh --test` in
+`../gooti-relay`), and on relay.getgooti.com only with the release that needs it.
+
 ## Things that cost time before
 
 - **Backup panel state is a signal.** In `backup-panel.component.ts`, `phase` is a signal and `canRestore` is a

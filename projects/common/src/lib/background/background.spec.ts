@@ -1,5 +1,11 @@
 import { BunkerForwarder, forgetSilenceNotices, initializeBackground } from './background';
-import { BUNKER_DID_NOT_ANSWER, DESKTOP_DID_NOT_ANSWER } from '../nip46/client';
+import {
+  BUNKER_DID_NOT_ANSWER,
+  DESKTOP_DID_NOT_ANSWER,
+  DESKTOP_DISCONNECTED,
+  DESKTOP_NOT_ALLOWED,
+  DESKTOP_RETIRED_KEY,
+} from '../nip46/client';
 import { BackgroundCommon } from './background-common';
 import { NostrHelper } from '../helpers/nostr-helper';
 import { BUNKER_NOT_CONNECTED } from '../nip46/client';
@@ -643,6 +649,35 @@ describe('shared vault unlock', () => {
     }
     await expectAsync(dispatch(note('to the phone'))).toBeResolvedTo({ id: 'from-bunker' });
     expect(forwardedOptions).toEqual([undefined]);
+  });
+
+  it('asks for Allow when Gooti Desktop refuses the shared key of an older backup', async () => {
+    session = desktopSession();
+    forwardError = new Error(DESKTOP_RETIRED_KEY);
+    await expectAsync(dispatch(note('first'))).toBeRejectedWithError(DESKTOP_NOT_ALLOWED);
+  });
+
+  it('tells when Gooti Desktop disconnected this browser, naming the site and identity, once', async () => {
+    session = desktopSession();
+    forwardError = new Error(DESKTOP_DISCONNECTED);
+    await expectAsync(dispatch(note('first'))).toBeRejectedWithError(DESKTOP_DISCONNECTED);
+    // Afterwards the browser has no allowed key: the same kind of notice, not a second window.
+    forwardError = new Error(DESKTOP_NOT_ALLOWED);
+    await expectAsync(dispatch(note('second'))).toBeRejectedWithError(DESKTOP_NOT_ALLOWED);
+    await flush();
+    expect(created.length).toBe(1);
+    const url = new URL(created[0].url ?? '', 'https://gooti.test');
+    expect(url.searchParams.get('notice')).toBe('disconnected');
+    expect(url.searchParams.get('host')).toBe('primal.net');
+    expect(url.searchParams.get('nick')).toBe(session['identity_id-bunker']?.nick ?? '');
+  });
+
+  it('tells when Gooti Desktop has not allowed this browser yet', async () => {
+    session = desktopSession();
+    forwardError = new Error(DESKTOP_NOT_ALLOWED);
+    await expectAsync(dispatch(note('first'))).toBeRejectedWithError(DESKTOP_NOT_ALLOWED);
+    await flush();
+    expect(created.map((window) => new URL(window.url ?? '', 'https://gooti.test').searchParams.get('notice'))).toEqual(['allow']);
   });
 
   it('opens one notice when Gooti Desktop does not answer, not one per request', async () => {

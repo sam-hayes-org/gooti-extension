@@ -11,6 +11,7 @@ import { defaultBackupRelayIO } from '../backup/pool';
 import { createQuietQueue, publishIfLocalWins } from '../backup/quiet';
 import {
   BackupState,
+  LocalDevice,
   parseBackupRelays,
   stampPermissionLive,
   stampSite,
@@ -275,6 +276,22 @@ export abstract class BackgroundCommon {
       browserSessionData.vaultPassword,
       browserSessionData.salt,
     );
+  }
+
+  /**
+   * Stores this browser's device entry (its own key for Gooti Desktop, and which identities the
+   * desktop allowed), in the session and sealed in the vault. Reads storage again first.
+   */
+  async saveBackupDevice(device: LocalDevice): Promise<void> {
+    const session = await this.getBrowserSessionData();
+    if (!session?.backupState || !session.vaultPassword || !session.salt) {
+      return;
+    }
+    session.backupState = { ...session.backupState, device };
+    await browser.storage.session.set({ backupState: session.backupState });
+    await browser.storage.local.set({
+      backupState: await this.sealBackupState(session.backupState, session.vaultPassword, session.salt),
+    });
   }
 
   /** Seals backup state with the same vault key as encryptPermission. */

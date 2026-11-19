@@ -28,6 +28,7 @@ export function liveVaultFromSession(session: BrowserSessionData): LiveVault {
             },
           }
         : {}),
+      ...(identity.site !== undefined ? { site: identity.site } : {}),
     })),
     permissions: sessionPermissions(session).flatMap((permission) => {
       const identityPubkey = pubkeyById.get(permission.identityId);

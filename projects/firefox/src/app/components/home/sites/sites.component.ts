@@ -35,9 +35,23 @@ export class SitesComponent implements OnInit {
     this.#router.navigateByUrl(`/edit-identity/${entry.identity.id}/home`);
   }
 
-  onClickRemove(host: string, event: MouseEvent) {
+  onClickRemove(entry: SiteListEntry, event: MouseEvent) {
     event.stopPropagation();
-    this.confirm()?.show(`Remove ${host}?`, () => this.#remove(host));
+    const host = entry.host;
+    if (entry.identity.site !== host) {
+      this.confirm()?.show(`Remove ${host}?`, () => this.#remove(host));
+      return;
+    }
+    // A site-only identity made for this site: offer to throw it away with the site.
+    this.confirm()?.choose(
+      `Remove ${host}? Its site-only identity can go too.`,
+      { label: 'Keep identity', run: () => this.#remove(host) },
+      {
+        label: 'Delete identity',
+        danger: true,
+        run: () => this.#removeWithIdentity(host, entry.identity.id),
+      },
+    );
   }
 
   async #remove(host: string): Promise<void> {
@@ -49,6 +63,18 @@ export class SitesComponent implements OnInit {
     } catch (error) {
       console.error(error);
       this.toast()?.show('Could not remove this site');
+    }
+  }
+
+  /** Deleting the identity also removes every site that used it. */
+  async #removeWithIdentity(host: string, identityId: string): Promise<void> {
+    try {
+      await this.storage.deleteIdentity(identityId);
+      this.sites.set(this.#list());
+      this.toast()?.show(SITE_CLEARED_HINT);
+    } catch (error) {
+      console.error(error);
+      this.toast()?.show(`Could not remove ${host}`);
     }
   }
 

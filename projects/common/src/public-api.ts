@@ -38,11 +38,14 @@ export * from './lib/components/identity-current/identity-current.component';
 export * from './lib/components/identity-row/identity-row.component';
 export * from './lib/components/activity/activity.component';
 export * from './lib/components/backup-notice/backup-notice.component';
+export * from './lib/components/devices-panel/devices-panel.component';
+export * from './lib/components/desktop-pairing/desktop-pairing.component';
 
 // Site identity
 export { activeTabHost } from './lib/sites/active-tab';
 export { identityForSite, siteList, SITE_CLEARED_HINT, SITE_RELOAD_HINT } from './lib/sites/binding';
 export type { SiteListEntry } from './lib/sites/binding';
+export { lastUseByHost, lastUsedNote, readLastUseByHost, splitIdentities } from './lib/sites/site-identity';
 
 // Pipes
 export * from './lib/pipes/visual-nip05.pipe';
@@ -94,3 +97,4 @@ export type { BunkerRelayRefresh, ConnectedBunker } from './lib/nip46/client';
 
 export { checkNip05 } from './lib/nip05/check';
 export type { Nip05Check } from './lib/nip05/check';
+export type { DeviceList } from './lib/services/storage/related/devices';

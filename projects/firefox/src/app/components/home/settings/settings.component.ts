@@ -5,6 +5,7 @@ import {
   DateHelper,
   NavComponent,
   BackupPanelComponent,
+  DevicesPanelComponent,
   StartupService,
   StorageService,
 } from '@common';
@@ -12,7 +13,7 @@ import { getNewStorageServiceConfig } from '../../../common/data/get-new-storage
 
 @Component({
   selector: 'app-settings',
-  imports: [ConfirmComponent, BackupPanelComponent],
+  imports: [ConfirmComponent, BackupPanelComponent, DevicesPanelComponent],
   templateUrl: './settings.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './settings.component.scss',

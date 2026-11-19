@@ -41,6 +41,14 @@ export class HomeComponent implements OnInit {
     );
   }
 
+  async onClickKeep() {
+    if (!this.identity) {
+      return;
+    }
+    await this.#storage.keepAsRegularIdentity(this.identity.id);
+    this.#initialize(this.identity.id);
+  }
+
   async onConfirmDeletion() {
     await this.#storage.deleteIdentity(this.identity?.id);
     await this.#router.navigateByUrl('/home/identities');
