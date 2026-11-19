@@ -1,3 +1,15 @@
+@if (identity?.site) {
+  <div class="site-identity">
+    <p>
+      Site-only identity for <strong>{{ identity?.site }}</strong>. Delete it when
+      you are done, or keep it.
+    </p>
+    <button type="button" class="action quiet" (click)="onClickKeep()">
+      Keep as a regular identity
+    </button>
+  </div>
+}
+
 <lib-nav-item text="Keys" (click)="onClickNavigateTo('keys')"></lib-nav-item>
 
 <lib-nav-item

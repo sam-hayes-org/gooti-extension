@@ -12,4 +12,28 @@
     width: 100%;
     flex: none;
   }
+
+  .site-identity {
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--background-light);
+
+    p {
+      margin: 0 0 10px;
+      color: #9aa3b2;
+      font-size: 13px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    strong {
+      color: #e8edf5;
+      font-weight: 600;
+    }
+
+    button.action {
+      width: 100%;
+    }
+  }
 }

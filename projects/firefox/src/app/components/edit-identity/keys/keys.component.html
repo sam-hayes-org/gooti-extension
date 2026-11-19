@@ -140,33 +140,36 @@
         <div class="relay">{{ relay }}</div>
       }
     </div>
-    <button
-      class="sam-text-link"
-      type="button"
-      [disabled]="busy || waiting"
-      (click)="refreshRelays()"
-    >
-      Ask the bunker for its relays
-    </button>
-    @if (refreshing) {
-      <p class="copy" role="status">Asking the bunker…</p>
+    <!-- Gooti Desktop's relays come with backup, and its connection ends there, not here. -->
+    @if (!identity.desktop) {
+      <button
+        class="sam-text-link"
+        type="button"
+        [disabled]="busy || waiting"
+        (click)="refreshRelays()"
+      >
+        Ask the bunker for its relays
+      </button>
+      @if (refreshing) {
+        <p class="copy" role="status">Asking the bunker…</p>
+      }
+      @if (relayStatus) {
+        <p class="copy" role="status">{{ relayStatus }}</p>
+      }
+      <button
+        class="sam-text-link"
+        type="button"
+        [disabled]="busy"
+        (click)="
+          confirm.show(
+            'Disconnect this bunker?',
+            disconnect.bind(this)
+          )
+        "
+      >
+        Disconnect bunker
+      </button>
     }
-    @if (relayStatus) {
-      <p class="copy" role="status">{{ relayStatus }}</p>
-    }
-    <button
-      class="sam-text-link"
-      type="button"
-      [disabled]="busy"
-      (click)="
-        confirm.show(
-          'Disconnect this bunker?',
-          disconnect.bind(this)
-        )
-      "
-    >
-      Disconnect bunker
-    </button>
   }
   <lib-confirm #confirm></lib-confirm>
   <textarea

@@ -23,10 +23,10 @@
     [pubkey]="entry.identity.pubkey"
     [color]="entry.identity.color"
     [bunker]="!!entry.identity.bunker"
-    [unlinked]="!!entry.identity.bunker && !entry.identity.bunker.clientSecretKey"
+    [unlinked]="storage.bunkerUnlinked(entry.identity)"
     (activate)="onClickSite(entry)"
   >
-    <button type="button" class="remove" (click)="onClickRemove(entry.host, $event)">
+    <button type="button" class="remove" (click)="onClickRemove(entry, $event)">
       Remove
     </button>
   </lib-identity-row>

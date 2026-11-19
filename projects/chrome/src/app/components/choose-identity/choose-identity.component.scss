@@ -88,3 +88,32 @@ h1 {
     --row-nick-weight: 600;
   }
 }
+
+.new-site-identity {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 48px;
+  margin-top: 16px;
+  border: 1px dashed rgba(154, 163, 178, 0.45);
+  border-radius: 12px;
+  background: none;
+  color: #c5dbff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: #c5dbff;
+    background: rgba(13, 110, 253, 0.12);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+

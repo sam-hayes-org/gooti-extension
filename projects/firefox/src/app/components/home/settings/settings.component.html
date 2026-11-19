@@ -45,6 +45,10 @@
 
 <lib-backup-panel></lib-backup-panel>
 
+@if (backupPanel()?.phase() === 'ready') {
+  <lib-devices-panel [ready]="true"></lib-devices-panel>
+}
+
 <section class="group">
   <p class="kicker danger">Danger zone</p>
   <button

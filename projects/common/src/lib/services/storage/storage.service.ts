@@ -7,20 +7,34 @@ import {
   BrowserSyncData,
   GOOTI_META_PROPERTIES,
   GootiMetaData,
+  Identity_DECRYPTED,
 } from './types';
 import { GootiMetaHandler } from './gooti-meta-handler';
 import { CryptoHelper } from '@common';
 import {
   addBunkerIdentity,
   addIdentity,
+  addSiteIdentity,
   deleteIdentity,
   disconnectBunker,
   editNick,
+  keepAsRegularIdentity,
   saveBunkerRelays,
   saveBunkerSession,
   switchIdentity,
 } from './related/identity';
 import type { ConnectedBunker } from '../../nip46/client';
+import type { DeviceRelayIO } from '../../backup/device';
+import {
+  DesktopConnect,
+  DeviceList,
+  bunkerUnlinked,
+  desktopIdentityHere,
+  listDevices,
+  removeDeviceFromList,
+  renameThisDevice,
+  requestDesktopConnect,
+} from './related/devices';
 import { deletePermission } from './related/permission';
 import {
   createNewVault,
@@ -206,6 +220,15 @@ export class StorageService {
     await addIdentity.call(this, data);
   }
 
+  /** A new site-only identity for this host. The caller binds it to the site. */
+  async addSiteIdentity(host: string): Promise<Identity_DECRYPTED> {
+    return addSiteIdentity.call(this, host);
+  }
+
+  async keepAsRegularIdentity(identityId: string): Promise<void> {
+    await keepAsRegularIdentity.call(this, identityId);
+  }
+
   async addBunkerIdentity(data: { nick: string; connected: ConnectedBunker }): Promise<void> {
     await addBunkerIdentity.call(this, data);
   }
@@ -265,6 +288,43 @@ export class StorageService {
     onStep?: (step: BackupProgressStep | 'save') => void,
   ): Promise<{ published: boolean; changed: boolean; report: ChangeReport }> {
     return this.#exclusive(() => runBackUpNow.call(this, io, onStep));
+  }
+
+  /** "Devices" in Settings. Reads the relays. */
+  async listDevices(io: DeviceRelayIO): Promise<DeviceList> {
+    return listDevices.call(this, io);
+  }
+
+  async renameThisDevice(name: string, io: Pick<DeviceRelayIO, 'publish'>): Promise<void> {
+    await this.#exclusive(() => renameThisDevice.call(this, name, io));
+  }
+
+  /**
+   * Connects this browser to Gooti Desktop when a Desktop only identity needs it (see
+   * `requestDesktopConnect`). `refused`: the desktop disconnected the last key; make a new one.
+   */
+  /** "Bunker (unlinked)": a bunker identity this browser cannot reach. */
+  bunkerUnlinked(identity: Identity_DECRYPTED): boolean {
+    return bunkerUnlinked(this.getBrowserSessionHandler().browserSessionData, identity);
+  }
+
+  /** Whether an identity here signs through Gooti Desktop. `undefined` while locked. */
+  async desktopIdentityHere(): Promise<boolean | undefined> {
+    if (!this.getBrowserSessionHandler().browserSessionData && !(await this.loadBrowserSessionData())) {
+      return undefined;
+    }
+    return desktopIdentityHere.call(this);
+  }
+
+  async requestDesktopConnect(
+    send: (message: unknown) => Promise<unknown>,
+    refused = false,
+  ): Promise<DesktopConnect> {
+    return requestDesktopConnect.call(this, send, refused);
+  }
+
+  async removeDeviceFromList(id: string, io: DeviceRelayIO): Promise<void> {
+    await this.#exclusive(() => removeDeviceFromList.call(this, id, io));
   }
 
   /**

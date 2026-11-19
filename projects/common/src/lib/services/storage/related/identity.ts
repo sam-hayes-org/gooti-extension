@@ -8,6 +8,8 @@ import {
 import { colorForPubkey, identityPubkey, readIdentityColor } from '../../../identity/appearance';
 import { LiveIdentity, stampIdentity, stampSiteDeleted, tombstoneIdentity } from '../../../backup/state';
 import type { ConnectedBunker } from '../../../nip46/client';
+import { generateSecretKey } from 'nostr-tools';
+import { bytesToHex } from '@noble/hashes/utils';
 import { persistBackupSeal } from './seal-backup';
 
 export const editNick = async function (
@@ -62,8 +64,10 @@ export const addIdentity = async function (
   data: {
     nick: string;
     privkeyString: string;
+    /** Makes a site-only identity for this host (see `Identity_DECRYPTED.site`). */
+    site?: string;
   },
-): Promise<void> {
+): Promise<Identity_DECRYPTED> {
   this.assureIsInitialized();
 
   const privkey = NostrHelper.getNostrPrivkeyObject(
@@ -84,6 +88,7 @@ export const addIdentity = async function (
     privkey,
     createdAt: new Date().toISOString(),
     color: colorForPubkey(pubkey),
+    ...(data.site ? { site: data.site } : {}),
   };
 
   // Add the new identity to the session data.
@@ -94,7 +99,7 @@ export const addIdentity = async function (
     browserSessionData.selectedIdentityId = decryptedIdentity.id;
   }
   browserSessionData[`identity_${decryptedIdentity.id}`] = decryptedIdentity;
-  this.getBrowserSessionHandler().saveFullData(browserSessionData);
+  await this.getBrowserSessionHandler().saveFullData(browserSessionData);
 
   // Encrypt the new identity and add it to the sync data.
   const encryptedIdentity = await encryptIdentity.call(this, decryptedIdentity);
@@ -126,6 +131,39 @@ export const addIdentity = async function (
     );
     await persistBackupSeal.call(this);
   }
+  return decryptedIdentity;
+};
+
+/** A new key, named after the host and marked as a site-only identity for it. Not yet bound. */
+export const addSiteIdentity = async function (
+  this: StorageService,
+  host: string,
+): Promise<Identity_DECRYPTED> {
+  if (!isSiteHost(host)) {
+    throw new Error('This site has no usable address.');
+  }
+  return addIdentity.call(this, {
+    nick: host,
+    privkeyString: bytesToHex(generateSecretKey()),
+    site: host,
+  });
+};
+
+/** "Keep as a regular identity": the identity leaves the site-only identities group everywhere. */
+export const keepAsRegularIdentity = async function (
+  this: StorageService,
+  identityId: string,
+): Promise<void> {
+  this.assureIsInitialized();
+  const identity = this.getBrowserSessionHandler().browserSessionData?.[`identity_${identityId}`];
+  if (!identity) {
+    throw new Error('Identity not found in browser session data.');
+  }
+  if (identity.site === undefined) {
+    return;
+  }
+  delete identity.site;
+  await writeExistingIdentity.call(this, identity, true);
 };
 
 export const deleteIdentity = async function (
@@ -348,6 +386,9 @@ export const encryptIdentity = async function (
   if (identity.bunker) {
     encryptedIdentity.bunker = await this.encrypt(JSON.stringify(identity.bunker));
   }
+  if (identity.site) {
+    encryptedIdentity.site = await this.encrypt(identity.site);
+  }
 
   return encryptedIdentity;
 };
@@ -389,6 +430,7 @@ export const decryptIdentity = async function (
   const storedPubkey = identity.pubkey ? await open(identity.pubkey) : undefined;
   const bunkerJson = identity.bunker ? await open(identity.bunker) : undefined;
   const color = await openSealedColor(identity.color, open);
+  const site = identity.site ? await open(identity.site) : undefined;
   return assembleDecryptedIdentity({
     id: await open(identity.id),
     nick: await open(identity.nick),
@@ -397,6 +439,7 @@ export const decryptIdentity = async function (
     ...(storedPubkey ? { pubkey: storedPubkey } : {}),
     ...(color ? { color } : {}),
     ...(bunkerJson ? { bunkerJson } : {}),
+    ...(site ? { site } : {}),
   });
 };
 
@@ -408,6 +451,7 @@ export function assembleDecryptedIdentity(parts: {
   pubkey?: string;
   color?: string;
   bunkerJson?: string;
+  site?: string;
 }): Identity_DECRYPTED {
   const pubkey = /^[0-9a-f]{64}$/i.test(parts.pubkey ?? '')
     ? (parts.pubkey as string).toLowerCase()
@@ -431,7 +475,15 @@ export function assembleDecryptedIdentity(parts: {
   if (bunker) {
     identity.bunker = bunker;
   }
+  if (isSiteHost(parts.site)) {
+    identity.site = parts.site;
+  }
   return identity;
+}
+
+/** `location.host`, the same rule the shared record checks. */
+function isSiteHost(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && !/\s/.test(value) && !value.includes('/');
 }
 
 export const addBunkerIdentity = async function (
@@ -606,6 +658,7 @@ function liveIdentity(identity: Identity_DECRYPTED): LiveIdentity {
           },
         }
       : {}),
+    ...(identity.site !== undefined ? { site: identity.site } : {}),
   };
 }
 

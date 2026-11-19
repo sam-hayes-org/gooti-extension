@@ -10,6 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import * as bootstrap from 'bootstrap';
+import browser from 'webextension-polyfill';
 import { BackupProgressStep } from '../../backup/manual';
 import { IconButtonComponent } from '../icon-button/icon-button.component';
 import { ToastComponent } from '../toast/toast.component';
@@ -178,6 +179,10 @@ export class BackupPanelComponent implements OnInit, AfterViewInit {
       this.#refresh();
       this.restoreModal?.hide();
       toast.show('Merged the backup with this browser.');
+      // Entering the passphrase is one of the two moments this browser asks Gooti Desktop.
+      void this.#storage
+        .requestDesktopConnect((message) => browser.runtime.sendMessage(message))
+        .catch(() => undefined);
     });
   }
 

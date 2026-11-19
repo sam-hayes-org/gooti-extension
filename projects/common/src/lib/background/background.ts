@@ -19,12 +19,21 @@ import {
   BUNKER_NOT_CONNECTED,
   BunkerCallOptions,
   DESKTOP_DID_NOT_ANSWER,
+  DESKTOP_DISCONNECTED,
+  DESKTOP_NOT_ALLOWED,
+  DESKTOP_RETIRED_KEY,
   bunkerNip04Decrypt,
   bunkerNip04Encrypt,
   bunkerNip44Decrypt,
   bunkerNip44Encrypt,
   bunkerSignEvent,
+  checkGootiDesktop,
+  connectGootiDesktop,
 } from '../nip46/client';
+import { generateSecretKey, getPublicKey } from 'nostr-tools';
+import { browserCode, newDeviceId } from '../backup/device';
+import { bytesToHex, hexToBytes } from '../backup/state';
+import { deviceName } from '../services/storage/related/devices';
 import {
   bunkerSiteQuestion,
   describePermissionRequest,
@@ -116,6 +125,185 @@ function permissionPromptKey(req: BackgroundRequestMessage): string {
     return `${req.host}\n${req.method}\n${typeof kind === 'number' ? kind : ''}`;
   }
   return `${req.host}\n${req.method}`;
+}
+
+/**
+ * A Desktop only identity with this browser's own key, once Gooti Desktop allowed it. Before that
+ * (or for any other identity) the identity as stored, with the shared key if backup brought one.
+ */
+export function withBrowserKey(
+  session: BrowserSessionData,
+  identity: Identity_DECRYPTED,
+): Identity_DECRYPTED {
+  const device = session.backupState?.device;
+  if (
+    !identity.bunker ||
+    !device?.browserKey ||
+    !(device.desktopAllowed ?? []).includes(identity.pubkey) ||
+    !heldByGootiDesktop(session, identity)
+  ) {
+    return identity;
+  }
+  return { ...identity, bunker: { ...identity.bunker, clientSecretKey: device.browserKey } };
+}
+
+/** Where the popup reads how connecting to Gooti Desktop goes. Not secret; outside the vault. */
+export const DESKTOP_PAIRING_KEY = GOOTI_META_DATA_KEY.desktopPairing;
+
+export interface DesktopPairing {
+  state: 'waiting' | 'done' | 'refused' | 'failed';
+  /** This browser's code, also shown in Gooti Desktop. */
+  code: string;
+  at: number;
+  reason?: string;
+}
+
+async function setPairing(pairing: DesktopPairing): Promise<void> {
+  try {
+    await browser.storage.local.set({ [DESKTOP_PAIRING_KEY]: pairing });
+  } catch {
+    // Only the popup's note depends on it.
+  }
+}
+
+async function forgetDesktopAllowance(
+  common: Pick<BackgroundCommon, 'getBrowserSessionData' | 'saveBackupDevice'>,
+): Promise<void> {
+  const session = await common.getBrowserSessionData();
+  const device = session?.backupState?.device;
+  if (!device?.browserKey) {
+    return;
+  }
+  await common.saveBackupDevice({ ...device, desktopAllowed: [] });
+  await setPairing({
+    state: 'refused',
+    code: browserCode(getPublicKey(hexToBytes(device.browserKey))),
+    at: Date.now(),
+  });
+}
+
+/** A check at most this often: opening the popup again and again sends no flood of pings. */
+const DESKTOP_CHECK_MS = 60_000;
+let lastDesktopCheck = 0;
+
+/**
+ * When the popup opens on an allowed browser: does Gooti Desktop still accept its key? A ping to
+ * one allowed identity. Disconnected there: forget the allowance, and the popup says so with
+ * "Connect again". Not running, or another error: nothing changes.
+ */
+export async function checkThisBrowser(
+  common: Pick<BackgroundCommon, 'getBrowserSessionData' | 'saveBackupDevice'>,
+  now = Date.now(),
+  check: typeof checkGootiDesktop = checkGootiDesktop,
+  forget: typeof forgetDesktopAllowance = forgetDesktopAllowance,
+): Promise<void> {
+  // A clock that went back checks again.
+  if (now >= lastDesktopCheck && now - lastDesktopCheck < DESKTOP_CHECK_MS) {
+    return;
+  }
+  const session = await common.getBrowserSessionData();
+  const device = session?.backupState?.device;
+  if (!session || !device?.browserKey) {
+    return;
+  }
+  const allowed = device.desktopAllowed ?? [];
+  const identity = session.identities
+    .map((id) => session[`identity_${id}`])
+    .find(
+      (item): item is Identity_DECRYPTED =>
+        !!item?.bunker && allowed.includes(item.pubkey) && heldByGootiDesktop(session, item),
+    );
+  if (!identity?.bunker) {
+    return;
+  }
+  lastDesktopCheck = now;
+  try {
+    await check(device.browserKey, identity.bunker);
+  } catch (error) {
+    if (error instanceof Error && error.message === DESKTOP_DISCONNECTED) {
+      await forget(common);
+    }
+  }
+}
+
+/**
+ * "Connect again" in the notice window, after a site's request failed: asks Gooti Desktop again,
+ * with a new key when it disconnected this one. Returns the code both sides show.
+ */
+async function connectAgain(common: BackgroundCommon, fresh: boolean): Promise<{ code: string } | undefined> {
+  const session = await common.getBrowserSessionData();
+  if (!session?.backupState) {
+    return undefined;
+  }
+  const device = session.backupState.device ?? { id: newDeviceId() };
+  let key = device.browserKey;
+  let refused = false;
+  try {
+    const stored = await browser.storage.local.get(DESKTOP_PAIRING_KEY);
+    refused = (stored[DESKTOP_PAIRING_KEY] as DesktopPairing | undefined)?.state === 'refused';
+  } catch {
+    // Without it, the key stays unless the notice said disconnected.
+  }
+  if (!key || fresh || refused) {
+    key = bytesToHex(generateSecretKey());
+    await common.saveBackupDevice({ ...device, browserKey: key, desktopAllowed: [] });
+  }
+  void connectThisBrowser(common);
+  return { code: browserCode(getPublicKey(hexToBytes(key))) };
+}
+
+let pairingRun: Promise<void> | undefined;
+
+/**
+ * Asks Gooti Desktop to allow this browser's own key for each Desktop only identity it does not
+ * allow yet: the first waits for Allow on the desktop, the others follow at once. Runs here, not
+ * in the popup, so closing the popup does not stop it. Only the popup starts it, right after the
+ * user did something in this browser (`docs/DESIGN-browser-keys.md` in gooti-desktop).
+ */
+export function connectThisBrowser(common: BackgroundCommon): Promise<void> {
+  pairingRun ??= runPairing(common).finally(() => {
+    pairingRun = undefined;
+  });
+  return pairingRun;
+}
+
+async function runPairing(common: BackgroundCommon): Promise<void> {
+  const session = await common.getBrowserSessionData();
+  const device = session?.backupState?.device;
+  if (!session || !device?.browserKey) {
+    return;
+  }
+  const code = browserCode(getPublicKey(hexToBytes(device.browserKey)));
+  const name = deviceName(device);
+  const waiting = session.identities
+    .map((id) => session[`identity_${id}`])
+    .filter((identity): identity is Identity_DECRYPTED => !!identity?.bunker && heldByGootiDesktop(session, identity))
+    .filter((identity) => !(device.desktopAllowed ?? []).includes(identity.pubkey));
+  for (const identity of waiting) {
+    await setPairing({ state: 'waiting', code, at: Date.now() });
+    try {
+      await connectGootiDesktop(device.browserKey, identity.bunker as NonNullable<Identity_DECRYPTED['bunker']>, name);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '';
+      if (message === DESKTOP_DISCONNECTED) {
+        await forgetDesktopAllowance(common);
+      } else {
+        await setPairing({ state: 'failed', code, at: Date.now(), reason: message || 'Gooti Desktop did not answer.' });
+      }
+      return;
+    }
+    const latest = (await common.getBrowserSessionData())?.backupState?.device;
+    if (!latest || latest.browserKey !== device.browserKey) {
+      return;
+    }
+    await common.saveBackupDevice({
+      ...latest,
+      desktopAllowed: [...new Set([...(latest.desktopAllowed ?? []), identity.pubkey])],
+    });
+  }
+  if (waiting.length > 0) {
+    await setPairing({ state: 'done', code, at: Date.now() });
+  }
 }
 
 function connectedBunker(identity: Identity_DECRYPTED): {
@@ -287,7 +475,13 @@ async function applyToolbarLock(): Promise<void> {
 }
 
 /** Which bunker did not answer, from the client's error. */
-function bunkerSilence(error: unknown): 'desktop' | 'bunker' | undefined {
+/**
+ * Why a request failed in a way the site may not show: the bunker or Gooti Desktop did not answer,
+ * or Gooti Desktop disconnected this browser or has not allowed it yet.
+ */
+type SilentFailure = 'desktop' | 'bunker' | 'disconnected' | 'allow';
+
+function bunkerSilence(error: unknown): SilentFailure | undefined {
   const message = error instanceof Error ? error.message : '';
   if (message === DESKTOP_DID_NOT_ANSWER) {
     return 'desktop';
@@ -295,33 +489,50 @@ function bunkerSilence(error: unknown): 'desktop' | 'bunker' | undefined {
   if (message === BUNKER_DID_NOT_ANSWER) {
     return 'bunker';
   }
+  if (message === DESKTOP_DISCONNECTED) {
+    return 'disconnected';
+  }
+  if (message === DESKTOP_NOT_ALLOWED) {
+    return 'allow';
+  }
   return undefined;
 }
 
-/** At most one notice window per kind of bunker in this time. */
+/** At most one notice window per kind of failure in this time. */
 export const SILENCE_NOTICE_MS = 5 * 60_000;
-const lastSilenceNotice = new Map<'desktop' | 'bunker', number>();
+/** Disconnected and not allowed are one kind: both mean this browser cannot sign there. */
+const lastSilenceNotice = new Map<'desktop' | 'bunker' | 'browser', number>();
 
 /** For tests. */
 export function forgetSilenceNotices(): void {
   lastSilenceNotice.clear();
 }
 
-/** A small window saying the bunker did not answer, since the site may not show the error. */
-function showSilenceNotice(which: 'desktop' | 'bunker'): void {
+/**
+ * A small window saying why a site's request failed, since the site may not show the error. For
+ * this browser and Gooti Desktop it names the site and the identity, and offers to connect again.
+ */
+function showSilenceNotice(which: SilentFailure, host?: string, nick?: string): void {
   const now = Date.now();
-  const last = lastSilenceNotice.get(which);
+  const kind = which === 'disconnected' || which === 'allow' ? 'browser' : which;
+  const last = lastSilenceNotice.get(kind);
   if (last !== undefined && now - last < SILENCE_NOTICE_MS) {
     return;
   }
-  lastSilenceNotice.set(which, now);
+  lastSilenceNotice.set(kind, now);
+  const query = new URLSearchParams({ notice: which });
+  if (kind === 'browser') {
+    query.set('host', host ?? '');
+    query.set('nick', nick ?? '');
+  }
   void (async () => {
     try {
       await browser.windows.create({
-        url: `prompt.html?notice=${which}`,
+        url: `prompt.html?${query.toString()}`,
         type: 'popup',
         width: 375,
-        height: 320,
+        // The browser notices name the site and have a second button.
+        height: kind === 'browser' ? 460 : 320,
         focused: true,
       });
     } catch {
@@ -794,6 +1005,18 @@ export const initializeBackground = (
       await enqueueSiteWrite(host, identity, true);
       return;
     }
+    if (cardMessage?.type === 'connect-desktop') {
+      void connectThisBrowser(backgroundCommon);
+      return;
+    }
+    if (cardMessage?.type === 'connect-desktop-again') {
+      // "Connect again" in the notice window: answers with the code Gooti Desktop shows.
+      return connectAgain(backgroundCommon, (message as { fresh?: unknown }).fresh === true);
+    }
+    if (cardMessage?.type === 'check-desktop') {
+      void checkThisBrowser(backgroundCommon);
+      return;
+    }
     if (cardMessage?.type === 'clear-site') {
       const host = (message as { host?: unknown }).host;
       if (!usableHost(host)) {
@@ -900,12 +1123,16 @@ export const initializeBackground = (
       throw new Error(UNLOCK_DISMISSED);
     }
     identityNick = currentIdentity.nick;
+    // Gooti Desktop allowed this browser's own key: sign with it (in memory, never stored).
+    currentIdentity = withBrowserKey(browserSessionData, currentIdentity);
     if (
       !currentIdentity.privkey &&
       BUNKER_CALLS.has(req.method) &&
       !currentIdentity.bunker?.clientSecretKey
     ) {
-      throw new Error(BUNKER_NOT_CONNECTED);
+      throw new Error(
+        heldByGootiDesktop(browserSessionData, currentIdentity) ? DESKTOP_NOT_ALLOWED : BUNKER_NOT_CONNECTED,
+      );
     }
 
     if (bunkerDecides(currentIdentity, req.method)) {
@@ -1053,11 +1280,20 @@ export const initializeBackground = (
     }
     await note(once ? 'once' : 'allowed');
     return result;
-    } catch (error) {
+    } catch (caught) {
+      let error = caught;
+      if (error instanceof Error && error.message === DESKTOP_DISCONNECTED) {
+        // Disconnected on the desktop: forget the allowance. A new key asks again next time.
+        void forgetDesktopAllowance(backgroundCommon);
+      }
+      if (error instanceof Error && error.message === DESKTOP_RETIRED_KEY) {
+        // The shared key from an older backup: this browser needs its own key allowed.
+        error = new Error(DESKTOP_NOT_ALLOWED);
+      }
       const silent = bunkerSilence(error);
       await note(activityOutcome(error), silent ? (error as Error).message : undefined);
       if (silent) {
-        showSilenceNotice(silent);
+        showSilenceNotice(silent, req.host, identityNick);
       }
       throw error;
     }

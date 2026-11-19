@@ -91,7 +91,8 @@ export class KeysComponent extends NavComponent implements OnInit {
       pubkeyHex: pubkey,
       pubkeyNpub: NostrHelper.pubkey2npub(pubkey),
       isBunker: identity.bunker !== undefined,
-      connected: !!identity.bunker?.clientSecretKey,
+      // Gooti Desktop: this browser signs with its own key, kept apart from the identity.
+      connected: !!identity.bunker?.clientSecretKey || (!!session && heldByGootiDesktop(session, identity)),
       desktop: session ? heldByGootiDesktop(session, identity) : false,
       bunkerNpub: identity.bunker
         ? NostrHelper.pubkey2npub(identity.bunker.pubkey)

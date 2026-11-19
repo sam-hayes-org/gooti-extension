@@ -19,6 +19,15 @@ export const BUNKER_NOT_CONNECTED = 'Paste a new bunker link on this browser fir
 export const INVALID_BUNKER_LINK = 'Invalid bunker link.';
 export const BUNKER_SENT_NO_RELAYS = 'The bunker sent no relays.';
 export const BUNKER_NEEDS_WSS = 'The bunker needs a wss:// relay. Backup and Gooti Desktop accept only those.';
+/** Gooti Desktop's answer to a browser it disconnected or denied. A new key asks again. */
+export const DESKTOP_DISCONNECTED = 'Gooti Desktop disconnected this browser.';
+/**
+ * Gooti Desktop's answer to the shared key that older backups carry: it no longer accepts it. This
+ * browser shows `DESKTOP_NOT_ALLOWED` instead, and asks with its own key when the popup opens.
+ */
+export const DESKTOP_RETIRED_KEY = 'Update Gooti in this browser to sign through Gooti Desktop.';
+/** A browser with its own key that Gooti Desktop has not allowed yet. */
+export const DESKTOP_NOT_ALLOWED = 'Allow this browser in Gooti Desktop first. Open Gooti and look for the request.';
 export const BUNKER_TIMEOUT_MS = 60_000;
 /** Gooti Desktop gives you 5 minutes to approve, then answers itself. A little longer here. */
 export const DESKTOP_TIMEOUT_MS = 330_000;
@@ -51,6 +60,8 @@ export interface BunkerCallOptions {
 export interface DesktopCall {
   /** The site's host. Gooti Desktop shows it in its approval window and Activity. */
   site?: string;
+  /** No ping first: a browser that is not connected yet gets no pong. */
+  noPing?: true;
 }
 
 /** When each Gooti Desktop signer key last answered, in this worker's lifetime. */
@@ -181,6 +192,54 @@ export async function bunkerNip44Decrypt(
     options?.desktop
       ? signer.sendRequest('nip44_decrypt', [peerPubkey, ciphertext, ...siteParams(options)])
       : signer.nip44Decrypt(peerPubkey, ciphertext),
+  );
+}
+
+/**
+ * Asks Gooti Desktop to let this browser sign with its own key (`docs/DESIGN-browser-keys.md` in
+ * gooti-desktop). Resolves once the desktop allowed it: at once when it did before, or after the
+ * user presses Allow there. Rejects with `DESKTOP_DISCONNECTED` when it denied or disconnected the key.
+ */
+export async function connectGootiDesktop(
+  browserKeyHex: string,
+  bunker: SharedBunker,
+  name: string,
+  options?: { pool?: AbstractSimplePool; timeoutMs?: number },
+): Promise<void> {
+  await withSigner(
+    browserKeyHex,
+    { ...bunker, secret: null },
+    { ...options, desktop: { noPing: true } },
+    async (signer) => {
+      // The secret comes with the pointer in the backup; Gooti Desktop asks about no browser
+      // without it, so a stranger who sees its signer key on a relay cannot ask.
+      await signer.sendRequest('connect', [
+        bunker.pubkey,
+        bunker.secret ?? '',
+        '',
+        JSON.stringify({ name, gooti: 'browser' }),
+      ]);
+    },
+  );
+}
+
+/**
+ * Whether Gooti Desktop still accepts this browser's own key: a ping, without a site and without
+ * waiting long. Rejects with `DESKTOP_DISCONNECTED` when the desktop disconnected it, and with
+ * `DESKTOP_DID_NOT_ANSWER` when it is not running.
+ */
+export async function checkGootiDesktop(
+  browserKeyHex: string,
+  bunker: SharedBunker,
+  options?: { pool?: AbstractSimplePool },
+): Promise<void> {
+  await withSigner(
+    browserKeyHex,
+    { ...bunker, secret: null },
+    { ...options, timeoutMs: DESKTOP_PING_MS, desktop: { noPing: true } },
+    async (signer) => {
+      await signer.ping();
+    },
   );
 }
 
@@ -380,6 +439,14 @@ async function pointerFromLink(link: string): Promise<BunkerPointer> {
   return { ...pointer, relays };
 }
 
+function asError(error: unknown): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+  const text = typeof error === 'string' ? error.trim() : '';
+  return new Error(text || 'The bunker refused the request.');
+}
+
 async function withSigner<T>(
   clientSecretKeyHex: string,
   bunker: SharedBunker,
@@ -419,14 +486,28 @@ async function withSignerBytes<T>(
       timers.push(setTimeout(() => reject(new Error(silent)), ms));
     });
   try {
-    if (desktop) {
+    if (desktop && !options?.desktop?.noPing) {
       const last = desktopAnswers.get(pointer.pubkey);
       if (last === undefined || Date.now() - last > DESKTOP_RECENT_MS) {
-        await Promise.race([signer.ping(), auth, timeout(Math.min(DESKTOP_PING_MS, timeoutMs))]);
+        await Promise.race([
+          signer.ping().catch((error: unknown) => {
+            throw asError(error);
+          }),
+          auth,
+          timeout(Math.min(DESKTOP_PING_MS, timeoutMs)),
+        ]);
         desktopAnswers.set(pointer.pubkey, Date.now());
       }
     }
-    const result = await Promise.race([run(signer), auth, timeout(timeoutMs)]);
+    // nostr-tools rejects with the bunker's error text, not an Error: make it one, so callers can
+    // compare messages such as DESKTOP_DISCONNECTED.
+    const result = await Promise.race([
+      run(signer).catch((error: unknown) => {
+        throw asError(error);
+      }),
+      auth,
+      timeout(timeoutMs),
+    ]);
     if (desktop) {
       desktopAnswers.set(pointer.pubkey, Date.now());
     }

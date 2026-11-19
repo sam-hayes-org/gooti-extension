@@ -36,6 +36,13 @@ export interface SharedIdentity {
    * custodyAt wins, so an older copy of the key cannot undo a move.
    */
   custodyAt?: number;
+  /**
+   * A site-only identity: made with "New site-only identity", for this host (`location.host`).
+   * Meant to be thrown away later, so lists show it apart from the regular identities. Absent on
+   * a regular identity; "Keep as a regular identity" removes it. An older Gooti (Desktop 0.1.4,
+   * extension 2.0.0) may drop it when it writes the backup; the identity then turns regular.
+   */
+  site?: string;
 }
 
 /** Relays and secret from a bunker:// link. Not the relays where notes are published. */
@@ -141,6 +148,9 @@ function assertIdentity(value: unknown): asserts value is SharedIdentity {
   }
   assertOptionalDelete(value['deletedAt']);
   if (value['custodyAt'] !== undefined && !isTime(value['custodyAt'])) {
+    throw new Error('Invalid sync document.');
+  }
+  if (value['site'] !== undefined && !isHost(value['site'])) {
     throw new Error('Invalid sync document.');
   }
   const hasPrivkey = value['privkey'] !== undefined;

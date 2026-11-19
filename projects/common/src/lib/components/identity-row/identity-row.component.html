@@ -7,6 +7,9 @@
     @if (bunker) {
       <span class="bunker">{{ unlinked ? 'Bunker (unlinked)' : 'Bunker' }}</span>
     }
+    @if (note) {
+      <span class="note">{{ note }}</span>
+    }
   </span>
   <ng-content></ng-content>
 </div>

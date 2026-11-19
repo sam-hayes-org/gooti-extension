@@ -2,6 +2,7 @@ import {
   Component,
   inject,
   OnInit,
+  signal,
   viewChild,
   ChangeDetectionStrategy,
 } from '@angular/core';
@@ -9,12 +10,16 @@ import { Router } from '@angular/router';
 import {
   activeTabHost,
   ConfirmComponent,
+  DesktopPairingComponent,
   Identity_DECRYPTED,
   IdentityCurrentComponent,
   IdentityRowComponent,
   identityForSite,
+  lastUsedNote,
+  readLastUseByHost,
   SITE_CLEARED_HINT,
   SITE_RELOAD_HINT,
+  splitIdentities,
   StartupService,
   StorageService,
   ToastComponent,
@@ -26,7 +31,7 @@ import browser from 'webextension-polyfill';
   templateUrl: './identities.component.html',
   styleUrl: './identities.component.scss',
   changeDetection: ChangeDetectionStrategy.Eager,
-  imports: [ConfirmComponent, IdentityCurrentComponent, IdentityRowComponent, ToastComponent],
+  imports: [ConfirmComponent, DesktopPairingComponent, IdentityCurrentComponent, IdentityRowComponent, ToastComponent],
 })
 export class IdentitiesComponent implements OnInit {
   readonly storage = inject(StorageService);
@@ -38,6 +43,11 @@ export class IdentitiesComponent implements OnInit {
 
   host: string | null = null;
   hostReady = false;
+  /** Both groups start open; each can be closed. */
+  regularOpen = true;
+  siteIdentitiesOpen = true;
+  readonly siteTipId = crypto.randomUUID();
+  readonly #lastUse = signal(new Map<string, number>());
 
   get fromBackground(): boolean {
     return this.#startup.startupDetails.source === 'background';
@@ -50,7 +60,25 @@ export class IdentitiesComponent implements OnInit {
     );
   }
 
+  get identityGroups(): ReturnType<typeof splitIdentities> {
+    return splitIdentities(this.storage.getBrowserSessionHandler().browserSessionData);
+  }
+
+  /**
+   * The site's own identity sits on the card above. Without site-only identities the one list leaves
+   * it out; with both groups it is listed in its group too, as "Used here", so it shows which it is.
+   */
+  byNotCurrent(currentId: string | undefined): (identity: Identity_DECRYPTED) => boolean {
+    return (identity) => identity.id !== currentId;
+  }
+
+  /** When this browser last sent a request from the site the identity was made for. */
+  lastUsed(identity: Identity_DECRYPTED): string | undefined {
+    return identity.site ? lastUsedNote(this.#lastUse().get(identity.site)) : undefined;
+  }
+
   async ngOnInit(): Promise<void> {
+    void readLastUseByHost().then((lastUse) => this.#lastUse.set(lastUse));
     if (this.fromBackground) {
       this.host = this.#startup.startupDetails.host ?? null;
       this.hostReady = true;

@@ -942,3 +942,85 @@ describe('site bindings in the sync document', () => {
     ]);
   });
 });
+
+describe('site-only identities in the shared document', () => {
+  function siteLive(site?: string): LiveVault {
+    return {
+      identities: [
+        {
+          pubkey: ADA_PUB,
+          privkey: ADA,
+          nick: 'primal.net',
+          createdAt: CREATED,
+          ...(site ? { site } : {}),
+        },
+      ],
+      permissions: [],
+    };
+  }
+
+  it('publishes the site a site-only identity was made for', () => {
+    const state = createBackupState(keys, []);
+    const projected = projectSharedDocument(state, siteLive('primal.net'), 5_000);
+    expect(projected.document.identities[0].site).toBe('primal.net');
+    expect(canonicalSharedDocument(projected.document)).toContain('"site":"primal.net"');
+  });
+
+  it('drops the site at a new revision when the identity is kept as a regular one', () => {
+    let state = createBackupState(keys, []);
+    state = stampIdentity(state, siteLive('primal.net').identities[0], 100);
+    state = stampIdentity(state, siteLive().identities[0], 200);
+    const row = state.document.identities[0];
+    expect(row.site).toBeUndefined();
+    expect(row.updatedAt).toBe(200);
+  });
+
+  it('gives the site to the local identity, and a newer regular row wins over it', () => {
+    const local: LocalVault = { identities: [], permissions: [], selectedIdentityId: null };
+    const siteRow = {
+      pubkey: ADA_PUB,
+      privkey: ADA,
+      nick: 'primal.net',
+      createdAt: CREATED,
+      updatedAt: 100,
+      site: 'primal.net',
+    };
+    const applied = applySharedDocument(
+      local,
+      { v: 2, identities: [siteRow], permissions: [], relays: [], sites: [] },
+      () => 'id-1',
+    );
+    expect(applied.identities[0].site).toBe('primal.net');
+
+    const { site: _site, ...regular } = siteRow;
+    const kept = { ...regular, updatedAt: 200 };
+    expect(_site).toBe('primal.net');
+    const merged = mergeSharedDocuments(
+      { v: 2, identities: [siteRow], permissions: [], relays: [], sites: [] },
+      { v: 2, identities: [kept], permissions: [], relays: [], sites: [] },
+    );
+    expect(merged.identities[0].site).toBeUndefined();
+  });
+
+  it('rejects a site that is not a host', () => {
+    for (const site of ['', 'a b', 'example.com/path', 7]) {
+      expect(() =>
+        parseBackupState(
+          JSON.stringify({
+            signingKeyHex: bytesToHex(keys.signingKey),
+            encryptionKeyHex: bytesToHex(keys.encryptionKey),
+            relays: [],
+            document: {
+              v: 2,
+              identities: [
+                { pubkey: ADA_PUB, privkey: ADA, nick: 'Ada', createdAt: CREATED, updatedAt: 1, site },
+              ],
+              permissions: [],
+              relays: [],
+            },
+          }),
+        ),
+      ).toThrowError('Invalid sync state.');
+    }
+  });
+});

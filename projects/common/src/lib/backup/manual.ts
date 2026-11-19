@@ -12,6 +12,15 @@ export interface BackupRelayIO {
   publish(relays: readonly string[], event: Event): Promise<readonly string[]>;
   /** Newest matching event, or null when a relay answered and had none. */
   fetchNewest(relays: readonly string[], pubkey: string): Promise<Event | null>;
+  /**
+   * `fetchNewest`, and in the same request every event with the d tag `alsoD` (this device's
+   * record). Optional: without it, a backup does without.
+   */
+  fetchNewestAlso?(
+    relays: readonly string[],
+    pubkey: string,
+    alsoD: string,
+  ): Promise<{ newest: Event | null; also: Event[] }>;
 }
 
 export interface ManualSyncResult {

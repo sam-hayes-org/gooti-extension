@@ -21,7 +21,18 @@
             No
           </button>
         }
-        <button type="button" class="action primary" (click)="onClickYes()">
+        @if (altLabel) {
+          <button type="button" class="action quiet" (click)="onClickAlt()">
+            {{ altLabel }}
+          </button>
+        }
+        <button
+          type="button"
+          class="action"
+          [class.primary]="!yesDanger"
+          [class.danger]="yesDanger"
+          (click)="onClickYes()"
+        >
           {{ yesLabel }}
         </button>
       </div>

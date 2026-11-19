@@ -1,0 +1,47 @@
+<p class="kicker">Devices</p>
+<p class="copy">
+  Each Gooti that uses this backup. Remove one you no longer use from the list: it comes back if it backs up
+  again.
+</p>
+
+@if (loading() && rows().length === 0) {
+  <p class="copy">Reading the relays…</p>
+}
+
+@for (row of rows(); track row.id) {
+  <div class="device" [class.here]="row.here">
+    <i class="bi" [class.bi-window]="row.app === 'browser'" [class.bi-display]="row.app === 'desktop'"></i>
+    @if (row.here && renaming()) {
+      <form class="rename" (submit)="$event.preventDefault(); onSaveName()">
+        <input
+          type="text"
+          class="form-control"
+          name="deviceName"
+          aria-label="Name of this browser"
+          maxlength="80"
+          [(ngModel)]="nameDraft"
+          [disabled]="busy()"
+        />
+        <button type="submit" class="small primary" [disabled]="busy() || !nameDraft.trim()">Save</button>
+        <button type="button" class="small" [disabled]="busy()" (click)="onCancelRename()">Cancel</button>
+      </form>
+    } @else {
+      <span class="text">
+        <span class="name">{{ row.name }}</span>
+        <span class="note">{{ row.here ? 'This browser · ' : '' }}{{ note(row) }}</span>
+      </span>
+      @if (row.here) {
+        <button type="button" class="small" [disabled]="busy()" (click)="onRename(row)">Rename</button>
+      } @else {
+        <button type="button" class="small" [disabled]="busy()" (click)="onRemove(row)">Remove from list</button>
+      }
+    }
+  </div>
+}
+
+@if (error()) {
+  <p class="copy error" role="alert">{{ error() }}</p>
+  <button type="button" class="small retry" [disabled]="loading()" (click)="load()">Try again</button>
+}
+
+<lib-confirm #confirm></lib-confirm>

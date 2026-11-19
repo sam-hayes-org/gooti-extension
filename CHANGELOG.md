@@ -1,6 +1,20 @@
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [2.1.0] - Unreleased
+
+### Added
+
+- Site-only identities. When a new site asks which identity to use, **New site-only identity** makes a fresh identity for that site alone, to try it without your regular identities. Identities lists them in their own group, "Site-only identities", below "Regular identities"; an info icon explains them. The identity the open site uses also appears in its group, marked "Used here", so you see which kind it is. On its own site a site-only identity has **Use**. Its page offers **Keep as a regular identity**, and removing its site in Sites offers to delete it too. Backup carries the site (`site` on the identity row), and Gooti Desktop shows the same group. Extension 2.0.0 and Gooti Desktop 0.1.4 may drop the mark when they write the backup; the identity then shows as a regular one.
+- Devices in Settings: every Gooti that uses this backup, browsers and Gooti Desktops, with when each last backed up. Each device publishes a small sealed record after a backup, at most once an hour (kind 30078, `d` = `gooti-device:<id>`). **Rename** names this browser ("Firefox on Linux" until then). **Remove from list** takes another device off the list until its next backup; it does not lock that device out.
+- A key of its own for Gooti Desktop. For identities that Gooti Desktop holds, this browser signs with a key of its own that never goes into the backup. It asks the desktop once, right after you open the popup or enter the passphrase, with a short code that both sides show ("Allow this browser in Gooti Desktop"). Settings → Devices shows this browser's code. When Gooti Desktop disconnects this browser, Identities says so the next time you open the popup, with **Connect again**. When a site's request fails because Gooti Desktop disconnected this browser or has not allowed it yet, a small window says so at once (at most every 5 minutes), names the site and the identity, and offers **Connect again**; sites such as Primal do not show that error themselves.
+
+### Changed
+
+- Identities that Gooti Desktop holds no longer use the key that every browser shared through the backup. Each browser needs one **Allow** in Gooti Desktop 0.2.0 before it signs as them. Until then, requests fail with "Allow this browser in Gooti Desktop first".
+
+### Fixed
+
+- Activity shows the reason when a bunker refuses a request.
 
 ## [2.0.0] - 2026-11-15
 

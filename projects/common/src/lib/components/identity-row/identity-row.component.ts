@@ -16,6 +16,8 @@ export class IdentityRowComponent {
   @Input() color?: string;
   @Input() bunker = false;
   @Input() unlinked = false;
+  /** Short grey text after the nick, such as when a site-only identity was last used. */
+  @Input() note?: string;
   @Output() activate = new EventEmitter<void>();
 
   get fill(): string {
