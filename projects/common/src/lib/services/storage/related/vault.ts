@@ -444,6 +444,7 @@ async function openIdentity(
   const pubkey = identity.pubkey ? await CryptoHelper.open(identity.pubkey, key) : undefined;
   const color = identity.color ? await CryptoHelper.open(identity.color, key) : undefined;
   const bunkerJson = identity.bunker ? await CryptoHelper.open(identity.bunker, key) : undefined;
+  const site = identity.site ? await CryptoHelper.open(identity.site, key) : undefined;
   return assembleDecryptedIdentity({
     id: await CryptoHelper.open(identity.id, key),
     nick: await CryptoHelper.open(identity.nick, key),
@@ -452,6 +453,7 @@ async function openIdentity(
     ...(pubkey ? { pubkey } : {}),
     ...(color ? { color } : {}),
     ...(bunkerJson ? { bunkerJson } : {}),
+    ...(site ? { site } : {}),
   });
 }
 

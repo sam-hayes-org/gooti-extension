@@ -55,6 +55,11 @@ export interface Identity_DECRYPTED {
   /** Optional `#rrggbb`. The list derives one from the pubkey when this is absent. */
   color?: string;
   bunker?: IdentityBunker;
+  /**
+   * A site-only identity: the host it was made for with "New site-only identity". Shown apart
+   * from the regular identities. Absent on a regular identity.
+   */
+  site?: string;
 }
 
 export interface Identity_ENCRYPTED {
@@ -67,6 +72,8 @@ export interface Identity_ENCRYPTED {
   color?: string;
   /** Sealed JSON. Includes this browser's conversation key when connected. */
   bunker?: string;
+  /** Sealed host of a site-only identity. */
+  site?: string;
 }
 
 /** Leftover rows from a vault that stored a per-identity publish list. Not written anymore. */
@@ -142,6 +149,8 @@ export const GOOTI_META_DATA_KEY = {
   backupFlow: 'backupFlow',
   /** This browser's request log. Not part of the vault or the shared record. */
   activity: 'activity',
+  /** How connecting this browser to Gooti Desktop goes. No secret. */
+  desktopPairing: 'desktopPairing',
 } as const;
 
 export const GOOTI_META_PROPERTIES = [
@@ -149,6 +158,7 @@ export const GOOTI_META_PROPERTIES = [
   GOOTI_META_DATA_KEY.syncRetired,
   GOOTI_META_DATA_KEY.vaultSnapshots,
   GOOTI_META_DATA_KEY.activity,
+  GOOTI_META_DATA_KEY.desktopPairing,
 ] as const;
 
 export interface GootiMetaData {

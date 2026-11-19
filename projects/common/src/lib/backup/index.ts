@@ -63,4 +63,21 @@ export {
 } from './manual';
 export type { RemoteBackup, BackupProgressStep, BackupRelayIO } from './manual';
 export { BackupRelayFailureError, defaultBackupRelayIO, backupRelayIO } from './pool';
+export {
+  DEVICE_D_PREFIX,
+  DEVICE_REFRESH_MS,
+  buildDeviceEvent,
+  defaultBrowserDeviceName,
+  devicesFromEvents,
+  fetchDevices,
+  newDeviceId,
+  normalizeDeviceName,
+  openDeviceRecord,
+  publishDeviceRecord,
+  readDevice,
+  readDeviceEvent,
+  removeDevice,
+  sealDeviceRecord,
+} from './device';
+export type { DeviceApp, DeviceRecord, DeviceRelayIO, RemovedDevice } from './device';
 export type { BackupRelayFailure } from './pool';

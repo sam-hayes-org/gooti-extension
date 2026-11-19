@@ -24,6 +24,24 @@ export interface BackupState {
   document: SharedDocument;
   /** This browser only. Absent means automatic backup is off. Not part of the published blob. */
   autoBackup?: boolean;
+  /** This browser's device record (`device.ts`). Made on its first backup. Not published here. */
+  device?: LocalDevice;
+}
+
+/** This browser in "Devices". Only `id` and `name` travel, in the device record. */
+export interface LocalDevice {
+  id: string;
+  /** Set by "Rename". Absent: a name from the user agent. */
+  name?: string;
+  /** When the device record was last published, in ms. */
+  publishedAt?: number;
+  /**
+   * This browser's own key for Gooti Desktop (hex secret). Never in the backup: a lost laptop's
+   * key can then be disconnected on the desktop alone.
+   */
+  browserKey?: string;
+  /** Identities whose Gooti Desktop allowed `browserKey`. */
+  desktopAllowed?: string[];
 }
 
 export interface LiveIdentity {
@@ -33,6 +51,8 @@ export interface LiveIdentity {
   createdAt: string;
   color?: string;
   bunker?: SharedBunker;
+  /** The host a site-only identity was made for (see `SharedIdentity.site`). */
+  site?: string;
 }
 
 export interface LivePermission {
@@ -71,6 +91,7 @@ export interface LocalIdentity {
   createdAt: string;
   color?: string;
   bunker?: LocalBunker;
+  site?: string;
 }
 
 export interface LocalPermission {
@@ -147,13 +168,42 @@ export function parseBackupState(json: string): BackupState {
     throw new Error('Invalid sync state.');
   }
   const autoBackup = record['autoBackup'] === true;
+  const device = readLocalDevice(record['device']);
   return {
     signingKeyHex: record['signingKeyHex'].toLowerCase(),
     encryptionKeyHex: record['encryptionKeyHex'].toLowerCase(),
     relays: [...record['relays']],
     document: readStoredDocument(record['document']),
     ...(autoBackup ? { autoBackup: true } : {}),
+    ...(device ? { device } : {}),
   };
+}
+
+/** A damaged device entry is dropped: the next backup makes a new one. */
+function readLocalDevice(value: unknown): LocalDevice | undefined {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  const id = record['id'];
+  if (typeof id !== 'string' || !/^[0-9a-f]{32}$/.test(id)) {
+    return undefined;
+  }
+  const device: LocalDevice = { id };
+  if (typeof record['name'] === 'string' && record['name'].trim().length > 0) {
+    device.name = record['name'];
+  }
+  if (typeof record['publishedAt'] === 'number' && Number.isFinite(record['publishedAt'])) {
+    device.publishedAt = record['publishedAt'];
+  }
+  if (typeof record['browserKey'] === 'string' && HEX_KEY.test(record['browserKey'])) {
+    device.browserKey = record['browserKey'];
+  }
+  const allowed = record['desktopAllowed'];
+  if (Array.isArray(allowed)) {
+    device.desktopAllowed = allowed.filter((pubkey): pubkey is string => typeof pubkey === 'string' && HEX_KEY.test(pubkey));
+  }
+  return device;
 }
 
 /**
@@ -224,6 +274,7 @@ export function canonicalSharedDocument(document: SharedDocument): string {
       ...(identity.deletedAt !== undefined ? { deletedAt: identity.deletedAt } : {}),
       ...(identity.bunker !== undefined ? { bunker: publishedBunker(identity.bunker) } : {}),
       ...(identity.custodyAt !== undefined ? { custodyAt: identity.custodyAt } : {}),
+      ...(identity.site !== undefined ? { site: identity.site } : {}),
     }));
   const permissions = [...document.permissions]
     .sort((a, b) => permissionKey(a).localeCompare(permissionKey(b)))
@@ -581,6 +632,9 @@ function identityRecord(
   if (previous?.custodyAt !== undefined) {
     record.custodyAt = previous.custodyAt;
   }
+  if (identity.site !== undefined) {
+    record.site = identity.site;
+  }
   return record;
 }
 
@@ -604,6 +658,9 @@ function localIdentityFrom(
   };
   if (winner.privkey !== undefined) {
     identity.privkey = winner.privkey;
+  }
+  if (winner.site !== undefined) {
+    identity.site = winner.site;
   }
   if (winner.bunker) {
     const published = publishedBunker(winner.bunker);

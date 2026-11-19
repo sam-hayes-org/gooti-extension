@@ -1,4 +1,12 @@
-import { getPublicKey } from 'nostr-tools';
+import { Event, getPublicKey } from 'nostr-tools';
+import {
+  buildDeviceEvent,
+  devicesFromEvents,
+  openDeviceRecord,
+  readDeviceEvent,
+  removeDevice,
+  sealDeviceRecord,
+} from '../../backup/device';
 import { CryptoHelper, VAULT_CANARY } from '../../helpers/crypto-helper';
 import { sealSharedDocument } from '../../backup/blob';
 import { SharedDocument } from '../../backup/document';
@@ -500,4 +508,162 @@ describe('vault format v3', () => {
     expect(fetches).toBe(0);
     expect(vault.store).toEqual({});
   });
+
+  it('publishes the device record of this browser after a backup, at most once an hour', async () => {
+    const phrase =
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
+    const storage = wired(new MemoryVault());
+    await storage.createNewVault('device-password');
+    await storage.enableBackup(phrase, 'wss://relay.example');
+    const keys = await deriveSharedKeys(phrase);
+    const published: Event[] = [];
+    const io = {
+      async publish(_relays: readonly string[], event: Event) {
+        published.push(event);
+        return ['wss://relay.example'];
+      },
+      async fetchNewest() {
+        return null;
+      },
+      async fetchDeviceEvents() {
+        return [...published];
+      },
+    };
+
+    await storage.backUpNow(io);
+    const devices = published.filter((event) => readDeviceEvent(event, keys.pubkey));
+    expect(devices.length).toBe(1);
+    const state = storage.getBrowserSessionHandler().browserSessionData?.backupState;
+    const id = state?.device?.id as string;
+    expect(readDeviceEvent(devices[0], keys.pubkey)?.id).toBe(id);
+    const record = await openDeviceRecord(devices[0].content, keys.encryptionKey);
+    expect(record && 'app' in record ? record.app : undefined).toBe('browser');
+
+    // A second backup within the hour sends no second device record.
+    await storage.backUpNow(io);
+    expect(published.filter((event) => readDeviceEvent(event, keys.pubkey)).length).toBe(1);
+
+    // A rename sends one at once, under the same id.
+    await storage.renameThisDevice('  Work laptop ', io);
+    const renamed = published.filter((event) => readDeviceEvent(event, keys.pubkey));
+    expect(renamed.length).toBe(2);
+    const latest = await openDeviceRecord(renamed[1].content, keys.encryptionKey);
+    expect(latest && 'name' in latest ? latest.name : undefined).toBe('Work laptop');
+    expect(storage.getBrowserSessionHandler().browserSessionData?.backupState?.device?.id).toBe(id);
+
+    await expectAsync(storage.removeDeviceFromList(id, io)).toBeRejectedWithError(
+      'This browser cannot remove itself.',
+    );
+
+    // Another device leaves the list, even when its record is from this very second.
+    const other = '0c'.repeat(16);
+    published.push(
+      buildDeviceEvent(
+        keys.signingKey,
+        other,
+        await sealDeviceRecord({ id: other, name: 'Old laptop', app: 'browser', backedUpAt: 1 }, keys.encryptionKey),
+      ),
+    );
+    expect((await storage.listDevices(io)).devices.map((device) => device.name)).toContain('Old laptop');
+    await storage.removeDeviceFromList(other, io);
+    const listed = await storage.listDevices(io);
+    expect(listed.devices.map((device) => device.id)).toEqual([id]);
+    expect(listed.thisId).toBe(id);
+  });
+
+  it('lists this browser again at its next backup after another device removed it', async () => {
+    const phrase =
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
+    const storage = wired(new MemoryVault());
+    await storage.createNewVault('device-password');
+    await storage.enableBackup(phrase, 'wss://relay.example');
+    const keys = await deriveSharedKeys(phrase);
+    const published: Event[] = [];
+    const io = {
+      async publish(_relays: readonly string[], event: Event) {
+        published.push(event);
+        return ['wss://relay.example'];
+      },
+      async fetchNewest() {
+        return null;
+      },
+      async fetchNewestAlso(_relays: readonly string[], _pubkey: string, alsoD: string) {
+        const also = published.filter((event) => event.tags.some((tag) => tag[0] === 'd' && tag[1] === alsoD));
+        return { newest: null, also };
+      },
+      async fetchDeviceEvents() {
+        return [...published];
+      },
+    };
+    const mine = () => published.filter((event) => readDeviceEvent(event, keys.pubkey));
+
+    await storage.backUpNow(io);
+    expect(mine().length).toBe(1);
+    // Listed: a second backup within the hour sends nothing.
+    await storage.backUpNow(io);
+    expect(mine().length).toBe(1);
+
+    // Another device removes this browser from Devices, in this very second.
+    const id = storage.getBrowserSessionHandler().browserSessionData?.backupState?.device?.id as string;
+    await removeDevice(id, keys, ['wss://relay.example'], io);
+    expect(await devicesFromEvents(published, keys)).toEqual([]);
+
+    await storage.backUpNow(io);
+    expect(mine().length).toBe(3);
+    expect((await devicesFromEvents(published, keys)).map((device) => device.id)).toEqual([id]);
+    // Listed again: the next backup within the hour sends nothing.
+    await storage.backUpNow(io);
+    expect(mine().length).toBe(3);
+  });
+
+  it('asks Gooti Desktop only when a Desktop only identity needs it, with a new key after a refusal', async () => {
+    const phrase =
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
+    const storage = wired(new MemoryVault());
+    await storage.createNewVault('pairing-password');
+    await storage.enableBackup(phrase, 'wss://relay.example');
+    const sent: unknown[] = [];
+    const send = async (message: unknown) => {
+      sent.push(message);
+    };
+
+    // No Desktop only identity: nothing is sent and no key is made.
+    expect(await storage.requestDesktopConnect(send)).toBe('none');
+    expect(await storage.desktopIdentityHere()).toBeFalse();
+    expect(sent).toEqual([]);
+    expect(storage.getBrowserSessionHandler().browserSessionData?.backupState?.device?.browserKey).toBeUndefined();
+
+    // A pointer from Gooti Desktop arrives: a key is made, sealed with the rest, and the request goes out.
+    const session = storage.getBrowserSessionHandler().browserSessionData as BrowserSessionData;
+    session.identities.push('id-alice');
+    session['identity_id-alice'] = {
+      id: 'id-alice',
+      nick: 'Alice',
+      pubkey: 'aa'.repeat(32),
+      createdAt: '2026-01-01T00:00:00.000Z',
+      bunker: { pubkey: 'bb'.repeat(32), relays: ['wss://relay.example'], secret: null, gootiDesktop: true },
+    };
+    expect(await storage.requestDesktopConnect(send)).toBe('asked');
+    expect(await storage.desktopIdentityHere()).toBeTrue();
+    expect(sent).toEqual([{ type: 'connect-desktop' }]);
+    const first = storage.getBrowserSessionHandler().browserSessionData?.backupState?.device?.browserKey;
+    expect(first).toMatch(/^[0-9a-f]{64}$/);
+
+    // Allowed: no more requests.
+    const state = storage.getBrowserSessionHandler().browserSessionData?.backupState as BackupState;
+    storage.getBrowserSessionHandler().browserSessionData!.backupState = {
+      ...state,
+      device: { ...state.device!, desktopAllowed: ['aa'.repeat(32)] },
+    };
+    expect(await storage.requestDesktopConnect(send)).toBe('allowed');
+    expect(sent.length).toBe(1);
+
+    // Disconnected on the desktop: a new key asks again.
+    expect(await storage.requestDesktopConnect(send, true)).toBe('asked');
+    expect(sent.length).toBe(2);
+    const second = storage.getBrowserSessionHandler().browserSessionData?.backupState?.device;
+    expect(second?.browserKey).not.toBe(first);
+    expect(second?.desktopAllowed).toEqual([]);
+  });
 });
+

@@ -26,6 +26,9 @@ import {
   backupKeysFromState,
 } from '../../../backup/state';
 import { persistBackupSeal } from './seal-backup';
+import { refreshThisDevice } from './devices';
+import { deviceTag } from '../../../backup/device';
+import type { Event } from 'nostr-tools';
 import { absorbUntrackedSites, persistVaultV3 } from './vault';
 
 export const enableBackup = async function (
@@ -179,11 +182,27 @@ export const backUpNow = async function (
   await absorbUntrackedSites.call(this, session);
   const projected = projectSharedDocument(session.backupState, liveVaultFromSession(session), Date.now());
   session.backupState = { ...projected.state, relays };
+  // This browser's device record comes with the shared record, so a browser removed from
+  // Devices elsewhere is listed again after this backup (`refreshThisDevice`).
+  let seen: Event[] | undefined;
+  const deviceId = session.backupState.device?.id;
+  const fetchNewestAlso = io.fetchNewestAlso?.bind(io);
+  const reading: BackupRelayIO =
+    deviceId && fetchNewestAlso
+      ? {
+          publish: (to, event) => io.publish(to, event),
+          fetchNewest: async (from, pubkey) => {
+            const found = await fetchNewestAlso(from, pubkey, deviceTag(deviceId));
+            seen = found.also;
+            return found.newest;
+          },
+        }
+      : io;
   const result = await backUpShared(
     projected.document,
     backupKeysFromState(session.backupState),
     relays,
-    io,
+    reading,
     onStep,
   );
   onStep?.('save');
@@ -216,6 +235,11 @@ export const backUpNow = async function (
   }
   if (ahead) {
     this.queueQuietBackup();
+  }
+  try {
+    await refreshThisDevice.call(this, io, { seen });
+  } catch {
+    // "Devices" in Settings shows an older time until the next backup. The backup stands.
   }
   return { published: result.published, changed: result.changed, report: result.report };
 };
