@@ -120,7 +120,13 @@ data collection), the changes in the version, and how to test without an account
 
 https://chromewebstore.google.com/detail/gooti/cpcnmacmpalecmijkbcajanpdlcgjpgj
 
-Not recorded yet. The Chrome name comes from the manifest (`projects/chrome/public/manifest.json`):
-`Gooti - Nostr Identity Manager & Signer`, summary `Manage and switch between multiple identities while
-interacting with Nostr apps`. Record the store's description and screenshots here, and bring the name in
-line with the Firefox listing in the next release.
+Chrome takes the name and summary from the manifest (`projects/chrome/public/manifest.json`), so they
+change only with a new version's zip. Live with 2.1.0: `Gooti - Nostr Identity Manager & Signer`, summary
+`Manage and switch between multiple identities while interacting with Nostr apps`. In the manifest for the
+next release (summary at most 132 characters):
+
+- Name: `Gooti – Nostr Signer, Identities & Backup`
+- Summary: `Nostr signer (NIP-07): an identity per site, one encrypted backup for every device, keys on Gooti Desktop or a bunker.`
+
+The Firefox manifest carries the same two texts; they show in Firefox's add-on list, while the AMO listing
+name and summary are set on the store. Record the Chrome store's description and screenshots here.

@@ -1,5 +1,11 @@
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- The extension's name and description in the browser's add-on list: "Gooti – Nostr Signer, Identities & Backup", "Nostr signer (NIP-07): an identity per site, one encrypted backup for every device, keys on Gooti Desktop or a bunker."
+
 ## [2.1.0] - 2026-11-20
 
 ### Added

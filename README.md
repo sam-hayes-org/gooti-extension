@@ -1,6 +1,6 @@
 # Gooti
 
-## Nostr Identity Manager & Signer
+## Nostr Signer, Identities & Backup
 
 Gooti is a browser extension for managing multiple [Nostr](https://github.com/nostr-protocol/nostr) identities and for signing events on web apps without having to give them your keys.
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Gooti - Nostr Identity Manager & Signer",
-  "description": "Manage and switch between multiple identities while interacting with Nostr apps",
+  "name": "Gooti – Nostr Signer, Identities & Backup",
+  "description": "Nostr signer (NIP-07): an identity per site, one encrypted backup for every device, keys on Gooti Desktop or a bunker.",
   "version": "2.1.0",
   "homepage_url": "https://getgooti.com",
   "options_page": "options.html",
