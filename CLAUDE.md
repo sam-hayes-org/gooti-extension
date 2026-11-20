@@ -74,4 +74,31 @@ something new gets its write-policy change on the test relay first (`./deploy.sh
 The website's screenshots show these screens. Tell the user which screens changed, so they can ask for
 the screenshots in `../gooti-website` to be regenerated. See that repo's `CLAUDE.md`.
 
+## Store listings
+
+Firefox Add-ons (addons.mozilla.org/firefox/addon/gooti) and the Chrome Web Store each show a name, a
+summary, a description, screenshots and release notes. These are edited on the store sites and go out of
+date when features or screens change. **`docs/store-listing.md` holds their texts**, marked live or
+proposed: check against that file, update it with every proposed change, and give the user the text to
+paste from there.
+
+After a change that adds, removes or renames a feature, and before every release, check them and tell the
+user what needs remaking:
+
+- **Name and summary**: still the right pitch for what Gooti does now? On Firefox the listing name is set
+  on the store; the manifest `name` and `description` (both `projects/*/public/manifest.json`) show in the
+  browser's add-on list and should say the same.
+- **Description**: does each feature it lists still exist under that name, and is a new one missing?
+  Firefox supports limited Markdown (bold, italic, links, lists, blockquotes, abbreviations), no headings.
+- **Screenshots**: do they still show today's screens and wording? The Firefox ones (`release/amo-*.png`)
+  are rendered by `../gooti-website/tools/amo-screenshots.py` from the website's screenshots, so
+  regenerate those first.
+- **Release notes**: condensed from the version's section in `CHANGELOG.md`, for users, not developers.
+- **Listing details**: license MIT (Firefox still showed MPL-2.0 on 2026-11-20), privacy policy
+  https://getgooti.com/privacy.html, homepage https://getgooti.com.
+
+The release zips (`release/gooti-chrome-<v>.zip`, `gooti-firefox-<v>.zip`, and `gooti-source-<v>.zip`,
+a `git archive` of the release commit, for Mozilla's review) are made from clean builds. `release/` is
+not in git.
+
 The user commits. Do not commit unless asked.
